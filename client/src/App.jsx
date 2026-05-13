@@ -13,10 +13,13 @@ import BottomPanel from './components/BottomPanel';
 import StatusBar from './components/StatusBar';
 
 export default function App() {
-  const { cases, meta, loading } = useOutbreakData();
+  console.log('[App] Rendering...');
+  const { cases = [], meta = null, loading = true, error: dataError } = useOutbreakData();
   const { selected, selectLocation, clearSelection } = useDrillDown();
-  const { articles, filter: newsFilter, setFilter: setNewsFilter } = useNews();
-  const { guidelines } = useGuidelines();
+  const { articles = [], filter: newsFilter, setFilter: setNewsFilter } = useNews();
+  const { guidelines = {} } = useGuidelines();
+
+  if (dataError) console.error('[App] Data error:', dataError);
 
   const knownCases = cases.filter(c => c.total_cases != null);
   const globalCases = knownCases.length ? knownCases.reduce((s, c) => s + c.total_cases, 0) : null;
