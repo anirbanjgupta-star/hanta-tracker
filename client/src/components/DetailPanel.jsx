@@ -241,10 +241,13 @@ function LocationDetail({ locationId, onClear }) {
       )}
 
       <div className="detail-section">
-        <SourceCitationBlock sources={(data.source_urls || []).map(url => {
-          const domain = new URL(url).hostname.replace('www.', '');
-          const sourceName = domain.split('.')[0].toUpperCase();
-          return { source: sourceName, url };
+        <SourceCitationBlock sources={(data.source_urls || []).map(item => {
+          if (typeof item === 'string') {
+            const domain = new URL(item).hostname.replace('www.', '');
+            const sourceName = domain.split('.')[0].toUpperCase();
+            return { source: sourceName, url: item };
+          }
+          return item;
         })} />
       </div>
 
