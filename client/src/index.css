@@ -1,0 +1,6 @@
+/* Base reset — design tokens live in tokens.css, imported by App.jsx */
+#root {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
