@@ -1,0 +1,14 @@
+{
+  "last_updated": "2026-05-13T19:40:08.322Z",
+  "source_status": {
+    "who": true,
+    "promed": false,
+    "healthmap": false,
+    "cdc": false,
+    "newsapi": true,
+    "ecdc": true
+  },
+  "stale": false,
+  "flagged_count": 0,
+  "last_news_api_call": "2026-05-13T19:40:09.531Z"
+}

@@ -1,0 +1,35 @@
+{
+  "snapshots": {
+    "ES-CAN": [
+      {
+        "date": "2026-05-13",
+        "total_cases": 7,
+        "active_cases": 4,
+        "fatalities": 3,
+        "confidence": "high",
+        "alert_level": "WATCH"
+      }
+    ],
+    "US": [
+      {
+        "date": "2026-05-13",
+        "total_cases": 890,
+        "active_cases": 0,
+        "fatalities": null,
+        "confidence": "low",
+        "alert_level": "WATCH"
+      }
+    ],
+    "FR": [
+      {
+        "date": "2026-05-13",
+        "total_cases": 1,
+        "active_cases": 1,
+        "fatalities": 0,
+        "confidence": "low",
+        "alert_level": "WATCH"
+      }
+    ]
+  },
+  "updated_at": "2026-05-13T19:40:08.321Z"
+}
