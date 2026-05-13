@@ -2,8 +2,8 @@
   "buildCommand": "npm install && cd client && npm install && npm run build && cd ..",
   "outputDirectory": "client/dist",
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api" },
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/api/(.*)", "dest": "/api" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
