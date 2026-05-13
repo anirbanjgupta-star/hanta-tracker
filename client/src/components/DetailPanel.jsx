@@ -241,7 +241,11 @@ function LocationDetail({ locationId, onClear }) {
       )}
 
       <div className="detail-section">
-        <SourceCitationBlock sources={data.source_urls || []} />
+        <SourceCitationBlock sources={(data.source_urls || []).map(url => {
+          const domain = new URL(url).hostname.replace('www.', '');
+          const sourceName = domain.split('.')[0].toUpperCase();
+          return { source: sourceName, url };
+        })} />
       </div>
 
       <div className="detail-section" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
