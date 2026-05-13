@@ -68,6 +68,9 @@ export default function LatestNews({ articles = [], flaggedCount = 0, activeFilt
           transition: border-color 0.15s;
         }
         .news-card:hover { border-color: var(--accent-cyan); }
+        .news-card > :not(.news-badges):not(.news-headline):not(.news-meta):not(.news-summary):not(.news-link) {
+          display: none !important;
+        }
         .news-badges {
           position: absolute;
           top: 6px;
