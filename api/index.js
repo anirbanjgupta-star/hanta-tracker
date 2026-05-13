@@ -76,7 +76,8 @@ export default (req, res) => {
         children: [],
         source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu', 'https://www.cdc.gov'],
         transmission_rodent: 0.92,
-        transmission_person: 0.08
+        transmission_person: 0.08,
+        confidence: 'high'
       },
       {
         location_id: 'netherlands',
@@ -89,7 +90,8 @@ export default (req, res) => {
         children: [],
         source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu'],
         transmission_rodent: 0.93,
-        transmission_person: 0.07
+        transmission_person: 0.07,
+        confidence: 'high'
       },
       {
         location_id: 'france',
@@ -102,7 +104,8 @@ export default (req, res) => {
         children: [],
         source_urls: ['https://www.who.int', 'https://www.cdc.gov'],
         transmission_rodent: 0.94,
-        transmission_person: 0.06
+        transmission_person: 0.06,
+        confidence: 'high'
       }
     ];
     const found = allCases.find(c => c.location_id === locationId);
