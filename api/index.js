@@ -1,3 +1,4 @@
+// Rebuilt: 2026-05-13 with source_urls data included
 export default (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
