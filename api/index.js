@@ -58,7 +58,27 @@ export default (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
     return setTimeout(() => res.end(), 100);
   }
-  
+
+  // Route: /api/cases/:locationId
+  const casesMatch = pathname.match(/^\/api\/cases\/([a-z0-9-]+)$/);
+  if (casesMatch && req.method === 'GET') {
+    const locationId = casesMatch[1];
+    const allCases = [
+      { location_id: 'spain', location_name: 'Spain', total_cases: 8, active_cases: 5, fatalities: 1, lat: 40.46, lng: -3.75, children: [] },
+      { location_id: 'netherlands', location_name: 'Netherlands', total_cases: 3, active_cases: 2, fatalities: 0, lat: 52.13, lng: 5.29, children: [] },
+      { location_id: 'france', location_name: 'France', total_cases: 2, active_cases: 1, fatalities: 0, lat: 46.23, lng: 2.21, children: [] }
+    ];
+    const found = allCases.find(c => c.location_id === locationId);
+    if (!found) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
+    return res.status(200).end(JSON.stringify(found));
+  }
+
+  // Route: /api/trend/:locationId
+  const trendMatch = pathname.match(/^\/api\/trend\/([a-z0-9-]+)$/);
+  if (trendMatch && req.method === 'GET') {
+    return res.status(200).end(JSON.stringify([]));
+  }
+
   // 404
   res.status(404).end(JSON.stringify({ error: 'Not found' }));
 };
