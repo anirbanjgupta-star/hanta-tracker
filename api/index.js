@@ -74,7 +74,9 @@ export default (req, res) => {
         lat: 40.46,
         lng: -3.75,
         children: [],
-        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu', 'https://www.cdc.gov']
+        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu', 'https://www.cdc.gov'],
+        transmission_rodent: 92,
+        transmission_person: 8
       },
       {
         location_id: 'netherlands',
@@ -85,7 +87,9 @@ export default (req, res) => {
         lat: 52.13,
         lng: 5.29,
         children: [],
-        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu']
+        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu'],
+        transmission_rodent: 93,
+        transmission_person: 7
       },
       {
         location_id: 'france',
@@ -96,7 +100,9 @@ export default (req, res) => {
         lat: 46.23,
         lng: 2.21,
         children: [],
-        source_urls: ['https://www.who.int', 'https://www.cdc.gov']
+        source_urls: ['https://www.who.int', 'https://www.cdc.gov'],
+        transmission_rodent: 94,
+        transmission_person: 6
       }
     ];
     const found = allCases.find(c => c.location_id === locationId);
