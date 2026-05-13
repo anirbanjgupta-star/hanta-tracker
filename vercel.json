@@ -1,6 +1,10 @@
 {
   "buildCommand": "npm install && cd client && npm install && npm run build && cd ..",
   "outputDirectory": "client/dist",
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "client/dist/**", "use": "@vercel/static" }
+  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
