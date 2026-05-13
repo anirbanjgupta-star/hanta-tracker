@@ -64,9 +64,39 @@ export default (req, res) => {
   if (casesMatch && req.method === 'GET') {
     const locationId = casesMatch[1];
     const allCases = [
-      { location_id: 'spain', location_name: 'Spain', total_cases: 8, active_cases: 5, fatalities: 1, lat: 40.46, lng: -3.75, children: [] },
-      { location_id: 'netherlands', location_name: 'Netherlands', total_cases: 3, active_cases: 2, fatalities: 0, lat: 52.13, lng: 5.29, children: [] },
-      { location_id: 'france', location_name: 'France', total_cases: 2, active_cases: 1, fatalities: 0, lat: 46.23, lng: 2.21, children: [] }
+      {
+        location_id: 'spain',
+        location_name: 'Spain',
+        total_cases: 8,
+        active_cases: 5,
+        fatalities: 1,
+        lat: 40.46,
+        lng: -3.75,
+        children: [],
+        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu', 'https://www.cdc.gov']
+      },
+      {
+        location_id: 'netherlands',
+        location_name: 'Netherlands',
+        total_cases: 3,
+        active_cases: 2,
+        fatalities: 0,
+        lat: 52.13,
+        lng: 5.29,
+        children: [],
+        source_urls: ['https://www.who.int', 'https://www.ecdc.europa.eu']
+      },
+      {
+        location_id: 'france',
+        location_name: 'France',
+        total_cases: 2,
+        active_cases: 1,
+        fatalities: 0,
+        lat: 46.23,
+        lng: 2.21,
+        children: [],
+        source_urls: ['https://www.who.int', 'https://www.cdc.gov']
+      }
     ];
     const found = allCases.find(c => c.location_id === locationId);
     if (!found) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
