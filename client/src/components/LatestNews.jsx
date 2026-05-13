@@ -153,18 +153,20 @@ export default function LatestNews({ articles = [], flaggedCount = 0, activeFilt
       <div className="news-grid">
         {visible.map((a) => (
           <div className="news-card" key={a.id}>
-            <div className="news-badges">
-              {a.is_disputed && (
-                <span className="news-badge" style={{ background: 'rgba(155,93,229,0.2)', color: 'var(--accent-purple)', border: '1px solid var(--accent-purple)' }}>
-                  ⚑ DISPUTED
-                </span>
-              )}
-              {a.is_unverified_claim && (
-                <span className="news-badge" style={{ background: 'rgba(244,162,97,0.2)', color: 'var(--accent-amber)', border: '1px solid var(--accent-amber)' }}>
-                  ⚠ UNVERIFIED CLAIM
-                </span>
-              )}
-            </div>
+            {(a.is_disputed || a.is_unverified_claim) && (
+              <div className="news-badges">
+                {a.is_disputed && (
+                  <span className="news-badge" style={{ background: 'rgba(155,93,229,0.2)', color: 'var(--accent-purple)', border: '1px solid var(--accent-purple)' }}>
+                    ⚑ DISPUTED
+                  </span>
+                )}
+                {a.is_unverified_claim && (
+                  <span className="news-badge" style={{ background: 'rgba(244,162,97,0.2)', color: 'var(--accent-amber)', border: '1px solid var(--accent-amber)' }}>
+                    ⚠ UNVERIFIED CLAIM
+                  </span>
+                )}
+              </div>
+            )}
             <div className="news-headline">{a.headline || a.title || '—'}</div>
             <div className="news-meta">{a.source || '—'} · {fmtDate(a.published_at)}</div>
             {a.summary && <div className="news-summary">{a.summary}</div>}
