@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -8,5 +8,5 @@ module.exports = (req, res) => {
     { location_id: 'france', location_name: 'France', total_cases: 2, active_cases: 1, fatalities: 0, lat: 46.23, lng: 2.21 }
   ];
 
-  res.status(200).end(JSON.stringify(cases));
+  res.status(200).json(cases);
 };

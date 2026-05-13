@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -11,5 +11,5 @@ module.exports = (req, res) => {
     { id: '6', title: 'Hantavirus: What you need to know', summary: 'Expert explains symptoms and prevention', source: 'Health', url: 'https://example.com/health', published_at: '2026-05-08T16:00:00Z', is_disputed: 0, is_unverified_claim: 0 }
   ];
 
-  res.status(200).send(news);
+  res.status(200).json(news);
 };
