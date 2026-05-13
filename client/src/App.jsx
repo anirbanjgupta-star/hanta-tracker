@@ -11,6 +11,7 @@ import WorldMap from './components/WorldMap';
 import DetailPanel from './components/DetailPanel';
 import BottomPanel from './components/BottomPanel';
 import StatusBar from './components/StatusBar';
+import StatsPanel from './components/StatsPanel';
 
 export default function App() {
   console.log('[App] Rendering...');
@@ -73,6 +74,8 @@ export default function App() {
       />
 
       <StatusBar meta={meta} />
+
+      <StatsPanel />
     </div>
   );
 }

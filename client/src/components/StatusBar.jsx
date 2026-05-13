@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useVisitCounter } from '../hooks/useVisitCounter';
 
 const REFRESH_INTERVAL_MS = 300_000; // 5 minutes
 
@@ -11,7 +10,6 @@ function countActiveSources(sourceStatus) {
 export default function StatusBar({ meta }) {
   const [remaining, setRemaining] = useState(REFRESH_INTERVAL_MS);
   const startRef = useRef(Date.now());
-  const { visitCount } = useVisitCounter();
 
   // Reset when meta updates (SSE refresh fires)
   useEffect(() => {
@@ -83,7 +81,7 @@ export default function StatusBar({ meta }) {
         }
       `}</style>
       <div className="status-bar">
-        <span className="status-left">VISITS: {visitCount} · NEXT REFRESH IN {countdownStr}</span>
+        <span className="status-left">NEXT REFRESH IN {countdownStr}</span>
         <span className="status-centre">SOURCES ACTIVE: {active}/{total}</span>
         <div className="status-right">
           <span className="live-dot" />
