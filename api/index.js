@@ -168,43 +168,43 @@ export default async (req, res) => {
 
   try {
     // Route: /api/cases
-    if (pathname === '/api/cases' && req.method === 'GET') {
+    if ((pathname === '/api/cases' || pathname === '/cases') && req.method === 'GET') {
       const cases = await getCases();
       return res.status(200).end(JSON.stringify(cases));
     }
 
     // Route: /api/news
-    if (pathname === '/api/news' && req.method === 'GET') {
+    if ((pathname === '/api/news' || pathname === '/news') && req.method === 'GET') {
       const news = await getNews();
       return res.status(200).end(JSON.stringify(news));
     }
 
     // Route: /api/meta
-    if (pathname === '/api/meta' && req.method === 'GET') {
+    if ((pathname === '/api/meta' || pathname === '/meta') && req.method === 'GET') {
       const meta = await getMeta();
       return res.status(200).end(JSON.stringify(meta));
     }
 
     // Route: /api/guidelines
-    if (pathname === '/api/guidelines' && req.method === 'GET') {
+    if ((pathname === '/api/guidelines' || pathname === '/guidelines') && req.method === 'GET') {
       const guidelines = await getGuidelines();
       return res.status(200).end(JSON.stringify(guidelines || {}));
     }
 
     // Route: /api/alerts
-    if (pathname === '/api/alerts' && req.method === 'GET') {
+    if ((pathname === '/api/alerts' || pathname === '/alerts') && req.method === 'GET') {
       const cases = await getCases();
       const alerts = cases.filter(c => c.confidence === 'low' || c.conflict_flag === 1 || c.alert_level === 'WARNING' || c.alert_level === 'CRITICAL');
       return res.status(200).end(JSON.stringify(alerts));
     }
 
     // Route: /api/health
-    if (pathname === '/api/health' && req.method === 'GET') {
+    if ((pathname === '/api/health' || pathname === '/health') && req.method === 'GET') {
       return res.status(200).end(JSON.stringify({ ok: true, time: new Date().toISOString() }));
     }
 
     // Route: /api/refresh (triggered by cron or on-demand)
-    if (pathname === '/api/refresh' && req.method === 'POST') {
+    if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'POST') {
       const success = await refreshAllData();
       return res.status(success ? 200 : 500).end(JSON.stringify({
         success,
@@ -214,7 +214,7 @@ export default async (req, res) => {
     }
 
     // Route: /api/stream
-    if (pathname === '/api/stream' && req.method === 'GET') {
+    if ((pathname === '/api/stream' || pathname === '/stream') && req.method === 'GET') {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
@@ -223,7 +223,7 @@ export default async (req, res) => {
     }
 
     // Route: /api/cases/:locationId
-    const casesMatch = pathname.match(/^\/api\/cases\/([a-z0-9-]+)$/);
+    const casesMatch = pathname.match(/^\/(?:api\/)?cases\/([a-z0-9-]+)$/);
     if (casesMatch && req.method === 'GET') {
       const locationId = casesMatch[1];
       const allCases = await getCases();
@@ -236,7 +236,7 @@ export default async (req, res) => {
     }
 
     // Route: /api/trend/:locationId
-    const trendMatch = pathname.match(/^\/api\/trend\/([a-z0-9-]+)$/);
+    const trendMatch = pathname.match(/^\/(?:api\/)?trend\/([a-z0-9-]+)$/);
     if (trendMatch && req.method === 'GET') {
       const locationId = trendMatch[1];
       try {
