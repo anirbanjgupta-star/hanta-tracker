@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-14T11:30:07.512Z",
+  "last_updated": "2026-05-14T15:38:08.226Z",
   "source_status": {
     "who": true,
     "promed": false,
@@ -10,7 +10,7 @@
   },
   "stale": false,
   "flagged_count": 0,
-  "last_news_api_call": "2026-05-14T14:00:00.000Z",
+  "last_news_api_call": "2026-05-14T15:29:42.436Z",
   "countries_affected": 4,
   "total_cases": 5,
   "total_fatalities": 2

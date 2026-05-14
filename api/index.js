@@ -1,8 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
-import { runAggregator } from '../server/aggregator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '../data');
@@ -131,10 +130,7 @@ async function getMeta() {
 
 async function refreshAllData() {
   try {
-    console.log('[API] Refreshing all data from live sources');
-
-    // Run the aggregator to pull fresh data from CDC, WHO, ECDC, etc.
-    await runAggregator();
+    console.log('[API] Refreshing cache from data files');
 
     // Clear in-memory cache
     dataCache.cases = null;
@@ -146,7 +142,7 @@ async function refreshAllData() {
     // Clear KV cache
     await clearAllCache();
 
-    // Pre-load all data (which will now read the freshly aggregated files and populate both caches)
+    // Pre-load all data (which will read from files and populate both caches)
     await Promise.all([
       getCases(),
       getNews(),
@@ -154,10 +150,10 @@ async function refreshAllData() {
       getMeta()
     ]);
 
-    console.log('[API] Data refresh complete');
+    console.log('[API] Cache refresh complete');
     return true;
   } catch (err) {
-    console.error('[API] Data refresh failed:', err);
+    console.error('[API] Cache refresh failed:', err);
     return false;
   }
 }
@@ -169,11 +165,6 @@ export default async (req, res) => {
 
   const url = new URL(req.url, 'http://' + req.headers.host);
   const pathname = url.pathname;
-
-  // Log all requests for debugging
-  if (req.method === 'POST' || pathname.includes('refresh')) {
-    console.log(`[API] ${req.method} ${pathname} (url: ${req.url})`);
-  }
 
   try {
     // Route: /api/cases
@@ -214,24 +205,12 @@ export default async (req, res) => {
 
     // Route: /api/refresh (triggered by cron or on-demand)
     if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'POST') {
-      console.log('[API] Refresh request received');
-      try {
-        const success = await refreshAllData();
-        const result = {
-          success,
-          message: success ? 'Data refreshed successfully' : 'Data refresh failed',
-          timestamp: new Date().toISOString()
-        };
-        console.log('[API] Refresh response:', result);
-        return res.status(success ? 200 : 500).end(JSON.stringify(result));
-      } catch (refreshErr) {
-        console.error('[API] Refresh error:', refreshErr.message);
-        return res.status(500).end(JSON.stringify({
-          success: false,
-          message: 'Refresh error: ' + refreshErr.message,
-          timestamp: new Date().toISOString()
-        }));
-      }
+      const success = await refreshAllData();
+      return res.status(success ? 200 : 500).end(JSON.stringify({
+        success,
+        message: success ? 'Cache refreshed successfully' : 'Cache refresh failed',
+        timestamp: new Date().toISOString()
+      }));
     }
 
     // Route: /api/stream
@@ -272,12 +251,7 @@ export default async (req, res) => {
     }
 
     // 404
-    console.log(`[API] 404: ${req.method} ${pathname}`);
-    res.status(404).end(JSON.stringify({
-      error: 'Not found',
-      path: pathname,
-      method: req.method
-    }));
+    res.status(404).end(JSON.stringify({ error: 'Not found' }));
   } catch (err) {
     console.error('API error:', err);
     res.status(500).end(JSON.stringify({ error: 'Internal server error' }));

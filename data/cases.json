@@ -31,7 +31,7 @@
       "confidence": "high",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T11:30:07.507Z"
+      "last_updated": "2026-05-14T15:38:08.222Z"
     },
     {
       "location_id": "FR",
@@ -58,8 +58,8 @@
       "confidence": "low",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T11:30:07.510Z"
+      "last_updated": "2026-05-14T15:38:08.224Z"
     }
   ],
-  "updated_at": "2026-05-14T11:30:07.511Z"
+  "updated_at": "2026-05-14T15:38:08.225Z"
 }
