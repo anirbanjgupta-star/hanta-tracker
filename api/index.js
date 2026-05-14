@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { readFile } from 'fs/promises';
 import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
 import { loadNews } from './data-news.js';
+import { newsArticles } from './news-data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(__dirname, '../data');
@@ -75,16 +76,25 @@ async function getNews() {
       return kvData;
     }
   } catch (e) {
-    console.log('[INFO] KV cache unavailable, will try file');
+    console.log('[INFO] KV cache unavailable, will use embedded data');
   }
 
-  // Try loading from new data module with better path resolution
+  // Use embedded news articles (generated during build)
+  if (newsArticles && newsArticles.length > 0) {
+    console.log(`[INFO] Using embedded news data with ${newsArticles.length} articles`);
+    dataCache.news = newsArticles;
+    dataCache.lastRefresh = now;
+    // Store in KV for next call
+    await setDataWithTTL('news', newsArticles, CACHE_TTL_SECONDS);
+    return newsArticles;
+  }
+
+  // Fallback to file loading
   try {
     const newsData = await loadNews();
     if (newsData && newsData.length > 0) {
       dataCache.news = newsData;
       dataCache.lastRefresh = now;
-      // Store in KV for next call
       await setDataWithTTL('news', newsData, CACHE_TTL_SECONDS);
       return newsData;
     }

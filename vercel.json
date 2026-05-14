@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install && cd client && npm install && npm run build && cd ..",
+  "buildCommand": "npm install && node build-data.js && cd client && npm install && npm run build && cd ..",
   "outputDirectory": "client/dist",
   "includeFiles": [
     "data/**",
