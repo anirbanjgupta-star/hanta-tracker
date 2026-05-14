@@ -1,11 +1,15 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFile } from 'fs/promises';
+import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '../data');
 
-// In-memory cache for real-time updates
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_TTL_SECONDS = 5 * 60; // 5 minutes in seconds for KV
+
+// In-memory cache (fallback for local development)
 let dataCache = {
   cases: null,
   news: null,
@@ -13,8 +17,6 @@ let dataCache = {
   meta: null,
   lastRefresh: 0
 };
-
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function readDataFile(filename) {
   try {
@@ -28,29 +30,47 @@ async function readDataFile(filename) {
 }
 
 async function getCases() {
+  // Try KV first (for Vercel persistence)
+  const kvData = await getDataFromKV('cases');
+  if (kvData) {
+    return kvData;
+  }
+
+  // Fallback to in-memory cache
   const now = Date.now();
   if (dataCache.cases && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.cases;
   }
 
+  // Read from file
   const data = await readDataFile('cases.json');
   if (data && data.cases) {
     dataCache.cases = data.cases;
     dataCache.lastRefresh = now;
+    // Store in KV for Vercel persistence
+    await setDataWithTTL('cases', data.cases, CACHE_TTL_SECONDS);
     return dataCache.cases;
   }
   return [];
 }
 
 async function getNews() {
+  // Try KV first (for Vercel persistence)
+  const kvData = await getDataFromKV('news');
+  if (kvData) {
+    return kvData;
+  }
+
+  // Fallback to in-memory cache
   const now = Date.now();
   if (dataCache.news && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.news;
   }
 
+  // Read from file
   const data = await readDataFile('news_articles.json');
-  if (data && Array.isArray(data)) {
-    const transformed = data.map(a => ({
+  if (data && Array.isArray(data.articles)) {
+    const transformed = data.articles.map(a => ({
       id: a.id || Math.random().toString(36).substr(2, 9),
       title: a.title,
       summary: a.summary || a.description || '',
@@ -60,41 +80,69 @@ async function getNews() {
       is_disputed: a.is_disputed || 0,
       is_unverified_claim: a.is_unverified_claim || 0,
     }));
-    dataCache.news = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    dataCache.news = sorted;
     dataCache.lastRefresh = now;
-    return dataCache.news;
+    // Store in KV for Vercel persistence
+    await setDataWithTTL('news', sorted, CACHE_TTL_SECONDS);
+    return sorted;
   }
   return [];
 }
 
 async function getGuidelines() {
+  // Try KV first
+  const kvData = await getDataFromKV('guidelines');
+  if (kvData) {
+    return kvData;
+  }
+
+  // Read from file
   const data = await readDataFile('guidelines.json');
-  return data;
+  if (data) {
+    // Store in KV for Vercel persistence
+    await setDataWithTTL('guidelines', data, CACHE_TTL_SECONDS);
+    return data;
+  }
+  return null;
 }
 
 async function getMeta() {
-  const data = await readDataFile('meta.json');
-  if (!data) {
-    return {
-      last_updated: new Date().toISOString(),
-      source_status: {},
-      stale: false,
-      flagged_count: 0
-    };
+  // Try KV first
+  const kvData = await getDataFromKV('meta');
+  if (kvData) {
+    return kvData;
   }
-  return data;
+
+  // Read from file
+  const data = await readDataFile('meta.json');
+  const result = data || {
+    last_updated: new Date().toISOString(),
+    source_status: {},
+    stale: false,
+    flagged_count: 0
+  };
+
+  // Store in KV for Vercel persistence
+  await setDataWithTTL('meta', result, CACHE_TTL_SECONDS);
+  return result;
 }
 
 async function refreshAllData() {
   try {
     console.log('[API] Refreshing all data');
+
+    // Clear in-memory cache
     dataCache.cases = null;
     dataCache.news = null;
     dataCache.guidelines = null;
     dataCache.meta = null;
     dataCache.lastRefresh = 0;
 
-    // Pre-load all data
+    // Clear KV cache
+    await clearAllCache();
+
+    // Pre-load all data (which will read from files and populate both caches)
     await Promise.all([
       getCases(),
       getNews(),
