@@ -244,6 +244,18 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: 'Not found' }));
     }
 
+    // /api/trend/:locationId
+    const trendMatch = pathname.match(/^\/(?:api\/)?trend\/([a-zA-Z0-9-]+)$/i);
+    if (trendMatch && req.method === 'GET') {
+      const locationId = trendMatch[1].toUpperCase();
+      const snapshots = await readDataFile('daily_snapshots.json');
+      if (snapshots && Array.isArray(snapshots)) {
+        const filtered = snapshots.filter(s => s.location_id === locationId);
+        return res.end(JSON.stringify(filtered.length > 0 ? filtered : []));
+      }
+      return res.end(JSON.stringify([]));
+    }
+
     // Serve static files or index.html for SPA routing
     const distPath = path.join(__dirname, 'client/dist');
     let filePath = path.join(distPath, pathname === '/' ? 'index.html' : pathname);
