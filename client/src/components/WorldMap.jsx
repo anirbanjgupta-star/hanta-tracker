@@ -1,4 +1,6 @@
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
+import L from 'leaflet';
 
 const LEVEL_STYLE = {
   CRITICAL: { color: '#E63946', fillColor: '#E63946', radius: 12 },
@@ -6,6 +8,24 @@ const LEVEL_STYLE = {
   ADVISORY: { color: '#00B4D8', fillColor: '#00B4D8', radius: 6 },
   WATCH:    { color: '#2EC4B6', fillColor: '#2EC4B6', radius: 4 },
 };
+
+function MapFitBounds({ cases }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (cases && cases.length > 0) {
+      const validCases = cases.filter(c => c.lat != null && c.lng != null);
+      if (validCases.length > 0) {
+        const bounds = L.latLngBounds(
+          validCases.map(c => [c.lat, c.lng])
+        );
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [cases, map]);
+
+  return null;
+}
 
 export default function WorldMap({ cases = [], onCountryClick }) {
   return (
@@ -37,8 +57,7 @@ export default function WorldMap({ cases = [], onCountryClick }) {
       <div className="map-wrap">
         <MapContainer
           center={[20, 0]}
-          zoom={2}
-          minZoom={2}
+          zoom={1}
           style={{ width: '100%', height: '100%' }}
           zoomControl={true}
           attributionControl={true}
@@ -49,6 +68,7 @@ export default function WorldMap({ cases = [], onCountryClick }) {
             subdomains="abcd"
             maxZoom={19}
           />
+          <MapFitBounds cases={cases} />
           {cases
             .filter(c => c.lat != null && c.lng != null)
             .map(c => {
