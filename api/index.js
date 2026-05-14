@@ -5,13 +5,14 @@ import { readFile } from 'fs/promises';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '../data');
 
-// Cache for data to avoid re-fetching on every request
-let casesCache = null;
-let newsCache = null;
-let guidelinesCache = null;
-let metaCache = null;
-let lastCasesRefresh = 0;
-let lastNewsRefresh = 0;
+// In-memory cache for real-time updates
+let dataCache = {
+  cases: null,
+  news: null,
+  guidelines: null,
+  meta: null,
+  lastRefresh: 0
+};
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -28,23 +29,23 @@ async function readDataFile(filename) {
 
 async function getCases() {
   const now = Date.now();
-  if (casesCache && now - lastCasesRefresh < CACHE_TTL) {
-    return casesCache;
+  if (dataCache.cases && now - dataCache.lastRefresh < CACHE_TTL) {
+    return dataCache.cases;
   }
 
   const data = await readDataFile('cases.json');
   if (data && data.cases) {
-    casesCache = data.cases;
-    lastCasesRefresh = now;
-    return casesCache;
+    dataCache.cases = data.cases;
+    dataCache.lastRefresh = now;
+    return dataCache.cases;
   }
   return [];
 }
 
 async function getNews() {
   const now = Date.now();
-  if (newsCache && now - lastNewsRefresh < CACHE_TTL) {
-    return newsCache;
+  if (dataCache.news && now - dataCache.lastRefresh < CACHE_TTL) {
+    return dataCache.news;
   }
 
   const data = await readDataFile('news_articles.json');
@@ -59,28 +60,60 @@ async function getNews() {
       is_disputed: a.is_disputed || 0,
       is_unverified_claim: a.is_unverified_claim || 0,
     }));
-    newsCache = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
-    lastNewsRefresh = now;
-    return newsCache;
+    dataCache.news = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    dataCache.lastRefresh = now;
+    return dataCache.news;
   }
   return [];
 }
 
 async function getGuidelines() {
   const data = await readDataFile('guidelines.json');
-  guidelinesCache = data;
   return data;
 }
 
 async function getMeta() {
   const data = await readDataFile('meta.json');
-  metaCache = data;
+  if (!data) {
+    return {
+      last_updated: new Date().toISOString(),
+      source_status: {},
+      stale: false,
+      flagged_count: 0
+    };
+  }
   return data;
+}
+
+async function refreshAllData() {
+  try {
+    console.log('[API] Refreshing all data');
+    dataCache.cases = null;
+    dataCache.news = null;
+    dataCache.guidelines = null;
+    dataCache.meta = null;
+    dataCache.lastRefresh = 0;
+
+    // Pre-load all data
+    await Promise.all([
+      getCases(),
+      getNews(),
+      getGuidelines(),
+      getMeta()
+    ]);
+
+    console.log('[API] Data refresh complete');
+    return true;
+  } catch (err) {
+    console.error('[API] Data refresh failed:', err);
+    return false;
+  }
 }
 
 export default async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'public, max-age=60');
 
   const url = new URL(req.url, 'http://' + req.headers.host);
   const pathname = url.pathname;
@@ -101,7 +134,7 @@ export default async (req, res) => {
     // Route: /api/meta
     if (pathname === '/api/meta' && req.method === 'GET') {
       const meta = await getMeta();
-      return res.status(200).end(JSON.stringify(meta || { last_updated: new Date().toISOString(), source_status: {}, stale: false, flagged_count: 0 }));
+      return res.status(200).end(JSON.stringify(meta));
     }
 
     // Route: /api/guidelines
@@ -120,6 +153,16 @@ export default async (req, res) => {
     // Route: /api/health
     if (pathname === '/api/health' && req.method === 'GET') {
       return res.status(200).end(JSON.stringify({ ok: true, time: new Date().toISOString() }));
+    }
+
+    // Route: /api/refresh (triggered by cron or on-demand)
+    if (pathname === '/api/refresh' && req.method === 'POST') {
+      const success = await refreshAllData();
+      return res.status(success ? 200 : 500).end(JSON.stringify({
+        success,
+        message: success ? 'Data refreshed successfully' : 'Data refresh failed',
+        timestamp: new Date().toISOString()
+      }));
     }
 
     // Route: /api/stream

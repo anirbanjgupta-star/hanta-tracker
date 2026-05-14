@@ -5,5 +5,11 @@
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/api/(.*)", "dest": "/api" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/refresh",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }
