@@ -35,7 +35,7 @@ export default function BottomPanel({
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
-          max-height: 260px;
+          max-height: 150px;
           overflow: hidden;
         }
         .bottom-fakenews { flex-shrink: 0; }

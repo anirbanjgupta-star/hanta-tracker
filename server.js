@@ -7,6 +7,7 @@ import http from 'http';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '.env.local') });
 
+(async () => {
 const { readCasesFromSheet, readNewsFromSheet } = await import('./api/sheets-integration.js');
 const { startScheduler } = await import('./refresh-scheduler.js');
 
@@ -261,3 +262,4 @@ server.listen(PORT, () => {
   // Start the data refresh scheduler
   startScheduler();
 });
+})();
