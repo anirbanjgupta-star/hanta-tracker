@@ -200,6 +200,31 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ ok: true, time: new Date().toISOString() }));
     }
 
+    // /api/refresh
+    if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'GET') {
+      console.log('[API] Refresh endpoint called at', new Date().toISOString());
+      // Trigger data refresh from Google Sheets
+      try {
+        const { fetchAllData } = await import('./scrapers.js');
+        const { writeCasesToSheet, writeNewsToSheet } = await import('./api/sheets-integration.js');
+
+        const allData = await fetchAllData();
+        await writeCasesToSheet(allData.cases);
+        await writeNewsToSheet(allData.articles);
+
+        // Clear cache to force reload on next request
+        dataCache.cases = null;
+        dataCache.news = null;
+        dataCache.lastRefresh = 0;
+
+        console.log('[API] ✓ Data refresh completed successfully');
+        return res.end(JSON.stringify({ ok: true, refreshed: true, time: new Date().toISOString() }));
+      } catch (err) {
+        console.error('[API] Error during refresh:', err.message);
+        return res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+    }
+
     // /api/cases/:locationId
     const casesMatch = pathname.match(/^\/(?:api\/)?cases\/([a-zA-Z0-9-]+)$/i);
     if (casesMatch && req.method === 'GET') {
