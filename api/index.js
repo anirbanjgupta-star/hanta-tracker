@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFile } from 'fs/promises';
 import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
+import { loadNews } from './data-news.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(__dirname, '../data');
@@ -77,27 +78,20 @@ async function getNews() {
     console.log('[INFO] KV cache unavailable, will try file');
   }
 
-  // Read from file as fallback
-  const data = await readDataFile('news_articles.json');
-  if (data && Array.isArray(data.articles)) {
-    const transformed = data.articles.map(a => ({
-      id: a.id || Math.random().toString(36).substr(2, 9),
-      title: a.title,
-      summary: a.summary || a.description || '',
-      source: a.source_name || a.source || 'News',
-      url: a.source_url || a.url || '',
-      published_at: a.published_at,
-      is_disputed: a.is_disputed || 0,
-      is_unverified_claim: a.is_unverified_claim || 0,
-    }));
-    const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
-
-    // Store in KV for next call
-    await setDataWithTTL('news', sorted, CACHE_TTL_SECONDS);
-    dataCache.news = sorted;
-    dataCache.lastRefresh = now;
-    return sorted;
+  // Try loading from new data module with better path resolution
+  try {
+    const newsData = await loadNews();
+    if (newsData && newsData.length > 0) {
+      dataCache.news = newsData;
+      dataCache.lastRefresh = now;
+      // Store in KV for next call
+      await setDataWithTTL('news', newsData, CACHE_TTL_SECONDS);
+      return newsData;
+    }
+  } catch (e) {
+    console.error('[ERROR] loadNews failed:', e.message);
   }
+
   return [];
 }
 
