@@ -22,23 +22,12 @@ export default function App() {
   const { visitCount } = useVisitCounter();
   const [showVisitStats, setShowVisitStats] = useState(false);
 
-  // Hotkey listener for Ctrl+Shift+N+S
+  // Hotkey listener for Shift+V
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+      if (e.shiftKey && (e.key === 'V' || e.key === 'v')) {
         e.preventDefault();
-        // Listen for the next key (S)
-        const handleNextKey = (e2) => {
-          if (e2.key === 's' || e2.key === 'S') {
-            e2.preventDefault();
-            setShowVisitStats(true);
-            document.removeEventListener('keydown', handleNextKey);
-          } else {
-            document.removeEventListener('keydown', handleNextKey);
-          }
-        };
-        document.addEventListener('keydown', handleNextKey);
-        setTimeout(() => document.removeEventListener('keydown', handleNextKey), 1000);
+        setShowVisitStats(true);
       }
     };
 
