@@ -59,11 +59,12 @@ export function useOutbreakData() {
   useEffect(() => {
     fetchData();
     connectSSE();
+    console.log('[useOutbreakData] Initial fetch');
     return () => {
       if (sseRef.current) sseRef.current.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
-  }, [fetchData, connectSSE]);
+  }, []);
 
   return { cases, meta, loading, error };
 }
