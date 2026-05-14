@@ -1,14 +1,17 @@
 {
-  "last_updated": "2026-05-13T20:45:07.482Z",
+  "last_updated": "2026-05-14T14:00:00.000Z",
   "source_status": {
     "who": true,
     "promed": false,
     "healthmap": false,
-    "cdc": false,
+    "cdc": true,
     "newsapi": true,
     "ecdc": true
   },
   "stale": false,
   "flagged_count": 0,
-  "last_news_api_call": "2026-05-13T20:15:08.072Z"
+  "last_news_api_call": "2026-05-14T14:00:00.000Z",
+  "countries_affected": 4,
+  "total_cases": 5,
+  "total_fatalities": 2
 }
