@@ -170,6 +170,11 @@ export default async (req, res) => {
   const url = new URL(req.url, 'http://' + req.headers.host);
   const pathname = url.pathname;
 
+  // Log all requests for debugging
+  if (req.method === 'POST' || pathname.includes('refresh')) {
+    console.log(`[API] ${req.method} ${pathname} (url: ${req.url})`);
+  }
+
   try {
     // Route: /api/cases
     if ((pathname === '/api/cases' || pathname === '/cases') && req.method === 'GET') {
