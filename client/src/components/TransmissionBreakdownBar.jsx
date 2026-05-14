@@ -35,9 +35,6 @@ export default function TransmissionBreakdownBar({ rodent = 0, person = 0 }) {
         }
       `}</style>
       <div className="tx-breakdown">
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontStyle: 'italic' }}>
-          (Approximate distribution)
-        </div>
         <div className="tx-row">
           <div className="tx-label-row">
             <span className="tx-label">Rodent-to-human</span>

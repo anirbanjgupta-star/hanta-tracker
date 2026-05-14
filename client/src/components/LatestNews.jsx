@@ -66,11 +66,6 @@ export default function LatestNews({ articles = [], flaggedCount = 0, activeFilt
           flex-direction: column;
           gap: 4px;
           transition: border-color 0.15s;
-          overflow: hidden;
-        }
-        .news-card * {
-          margin: 0;
-          padding: 0;
         }
         .news-card:hover { border-color: var(--accent-cyan); }
         .news-badges {
@@ -81,10 +76,6 @@ export default function LatestNews({ articles = [], flaggedCount = 0, activeFilt
           gap: 3px;
           flex-wrap: wrap;
           justify-content: flex-end;
-          min-height: 0;
-        }
-        .news-badges:empty {
-          display: none;
         }
         .news-badge {
           font-family: var(--font-display);
@@ -155,8 +146,8 @@ export default function LatestNews({ articles = [], flaggedCount = 0, activeFilt
       </div>
 
       <div className="news-grid">
-        {visible.map((a) => (
-          <div className="news-card" key={a.id}>
+        {visible.map((a, i) => (
+          <div className="news-card" key={a.id || i}>
             <div className="news-badges">
               {a.is_disputed && (
                 <span className="news-badge" style={{ background: 'rgba(155,93,229,0.2)', color: 'var(--accent-purple)', border: '1px solid var(--accent-purple)' }}>

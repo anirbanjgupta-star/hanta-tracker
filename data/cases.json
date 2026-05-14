@@ -1,65 +1,26 @@
 {
   "cases": [
     {
-      "location_id": "US",
-      "location_name": "United States",
-      "lat": 37.0902,
-      "lng": -95.7129,
-      "level": "country",
+      "location_id": "CRUISE-MV-HONDIUS",
+      "location_name": "MV Hondius Cruise Ship",
+      "lat": -54.8,
+      "lng": -68.3,
+      "level": "event",
       "parent_id": null,
-      "total_cases": 890,
-      "active_cases": 45,
-      "fatalities": 38,
-      "transmission_rodent": 1,
-      "transmission_person": 0,
-      "sources": [
-        "CDC"
-      ],
-      "confidence": "high",
-      "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T16:43:36.409Z"
-    },
-    {
-      "location_id": "ES-CAN",
-      "location_name": "Tenerife",
-      "lat": 28.2935785,
-      "lng": -16.6214471,
-      "level": "region",
-      "parent_id": "ES",
-      "total_cases": 7,
-      "active_cases": 4,
+      "total_cases": 11,
+      "active_cases": 8,
       "fatalities": 3,
-      "transmission_rodent": 0.85,
-      "transmission_person": 0.15,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
       "sources": [
+        "CDC",
         "WHO",
         "ECDC"
       ],
       "confidence": "high",
       "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T16:43:36.414Z"
-    },
-    {
-      "location_id": "NL",
-      "location_name": "Netherlands",
-      "lat": 52.1326,
-      "lng": 5.2913,
-      "level": "country",
-      "parent_id": null,
-      "total_cases": 12,
-      "active_cases": 8,
-      "fatalities": 1,
-      "transmission_rodent": 0.9,
-      "transmission_person": 0.1,
-      "sources": [
-        "ECDC"
-      ],
-      "confidence": "high",
-      "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T16:43:36.414Z"
+      "alert_level": "WARNING",
+      "last_updated": "2026-05-14T17:03:56.133Z"
     },
     {
       "location_id": "FR",
@@ -74,33 +35,140 @@
       "transmission_rodent": 0,
       "transmission_person": 1,
       "sources": [
-        "ECDC"
-      ],
-      "confidence": "medium",
-      "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T16:43:36.414Z"
-    },
-    {
-      "location_id": "SE",
-      "location_name": "Sweden",
-      "lat": 60.1282,
-      "lng": 18.6435,
-      "level": "country",
-      "parent_id": null,
-      "total_cases": 8,
-      "active_cases": 5,
-      "fatalities": 2,
-      "transmission_rodent": 0.95,
-      "transmission_person": 0.05,
-      "sources": [
-        "ECDC"
+        "ECDC",
+        "WHO"
       ],
       "confidence": "high",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T16:43:36.414Z"
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "NL",
+      "location_name": "Netherlands",
+      "lat": 52.1326,
+      "lng": 5.2913,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 2,
+      "active_cases": 2,
+      "fatalities": 0,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
+      "sources": [
+        "ECDC",
+        "WHO"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "ES",
+      "location_name": "Spain",
+      "lat": 40.4637,
+      "lng": -3.7492,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 1,
+      "active_cases": 1,
+      "fatalities": 0,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
+      "sources": [
+        "ECDC",
+        "WHO"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "GB",
+      "location_name": "United Kingdom",
+      "lat": 55.3781,
+      "lng": -3.436,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 2,
+      "active_cases": 2,
+      "fatalities": 0,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
+      "sources": [
+        "ECDC",
+        "WHO"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "AR",
+      "location_name": "Argentina",
+      "lat": -38.4161,
+      "lng": -63.6167,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 2,
+      "active_cases": 1,
+      "fatalities": 1,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
+      "sources": [
+        "WHO",
+        "CDC"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "CL",
+      "location_name": "Chile",
+      "lat": -35.6751,
+      "lng": -71.543,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 2,
+      "active_cases": 1,
+      "fatalities": 1,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
+      "sources": [
+        "WHO",
+        "CDC"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
+    },
+    {
+      "location_id": "IL",
+      "location_name": "Illinois (Winnebago County)",
+      "lat": 42.3078,
+      "lng": -88.7777,
+      "level": "region",
+      "parent_id": "US",
+      "total_cases": 1,
+      "active_cases": 1,
+      "fatalities": 0,
+      "transmission_rodent": 1,
+      "transmission_person": 0,
+      "sources": [
+        "CDC",
+        "IDPH"
+      ],
+      "confidence": "low",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T17:03:56.140Z"
     }
   ],
-  "updated_at": "2026-05-14T16:43:36.414Z"
+  "updated_at": "2026-05-14T17:03:56.140Z"
 }

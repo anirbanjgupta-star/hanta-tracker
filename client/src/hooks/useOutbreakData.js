@@ -31,40 +31,36 @@ export function useOutbreakData() {
   }, []);
 
   const connectSSE = useCallback(() => {
-    try {
-      if (sseRef.current) {
-        sseRef.current.close();
-      }
-      const es = new EventSource('/api/stream');
-      sseRef.current = es;
-
-      es.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === 'refresh') fetchData();
-        } catch { /* ignore malformed frames */ }
-      };
-
-      es.onerror = () => {
-        if (es) es.close();
-        sseRef.current = null;
-        // Don't reconnect if stream isn't available (e.g., on serverless)
-        // Just use polling instead
-      };
-    } catch {
-      // EventSource not available or stream failed - app will still work with initial data
+    if (sseRef.current) {
+      sseRef.current.close();
     }
+    const es = new EventSource('/api/stream');
+    sseRef.current = es;
+
+    es.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'refresh') fetchData();
+      } catch { /* ignore malformed frames */ }
+    };
+
+    es.onerror = () => {
+      es.close();
+      sseRef.current = null;
+      reconnectTimer.current = setTimeout(() => {
+        connectSSE();
+      }, 5000);
+    };
   }, [fetchData]);
 
   useEffect(() => {
     fetchData();
     connectSSE();
-    console.log('[useOutbreakData] Initial fetch');
     return () => {
       if (sseRef.current) sseRef.current.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
-  }, []);
+  }, [fetchData, connectSSE]);
 
   return { cases, meta, loading, error };
 }

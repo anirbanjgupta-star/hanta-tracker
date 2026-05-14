@@ -2,54 +2,54 @@
   "articles": [
     {
       "id": "1",
-      "title": "CDC Updates Hantavirus Case Count to 890 in United States",
-      "summary": "The Centers for Disease Control reports cumulative Hantavirus cases across North America",
+      "title": "CDC Issues Advisory on Hantavirus Cluster Linked to Cruise Ship",
+      "summary": "The CDC issued guidance on the Andes virus cluster identified aboard the MV Hondius cruise ship, with 11 confirmed cases and 3 deaths reported as of May 13, 2026",
       "source_name": "CDC",
-      "source_url": "https://www.cdc.gov/hantavirus",
-      "published_at": "2026-05-14T15:43:36.414Z",
+      "source_url": "https://www.cdc.gov/han/php/notices/han00528.html",
+      "published_at": "2026-05-12T17:03:56.140Z",
       "is_disputed": 0,
       "is_unverified_claim": 0
     },
     {
       "id": "2",
-      "title": "Tenerife Outbreak: 7 Confirmed Hantavirus Cases",
-      "summary": "WHO confirms cluster of hantavirus cases in Canary Islands",
-      "source_name": "WHO",
-      "source_url": "https://www.who.int",
-      "published_at": "2026-05-14T14:43:36.414Z",
+      "title": "France Confirms New Hantavirus Case in Woman Evacuated from Cruise Ship",
+      "summary": "France has confirmed a hantavirus case in a woman who became symptomatic during repatriation after disembarking from the MV Hondius",
+      "source_name": "Euronews",
+      "source_url": "https://www.euronews.com/health/2026/05/11/hantavirus-outbreak-latest-france-confirms-new-case-in-a-woman-evacuated-from-the-ship",
+      "published_at": "2026-05-12T17:03:56.140Z",
       "is_disputed": 0,
       "is_unverified_claim": 0
     },
     {
       "id": "3",
-      "title": "Netherlands Reports 12 Hantavirus Cases",
-      "summary": "European outbreak continues with cases confirmed in Netherlands",
-      "source_name": "ECDC",
-      "source_url": "https://www.ecdc.europa.eu",
-      "published_at": "2026-05-14T13:43:36.414Z",
+      "title": "Spain Confirms Hantavirus Case Amongst Cruise Ship Evacuees",
+      "summary": "Spain has confirmed one new hantavirus case in a person tested upon arrival following evacuation from the MV Hondius cruise ship",
+      "source_name": "Euronews",
+      "source_url": "https://www.euronews.com/health/2026/05/11/hantavirus-outbreak-latest-spain-confirms-one-new-case-amongst-evacuees",
+      "published_at": "2026-05-12T17:03:56.140Z",
       "is_disputed": 0,
       "is_unverified_claim": 0
     },
     {
       "id": "4",
-      "title": "Sweden Sees 8 Hantavirus Cases, Healthcare Alert Issued",
-      "summary": "Swedish health authorities warn of potential rodent-borne transmission",
-      "source_name": "ECDC",
-      "source_url": "https://www.ecdc.europa.eu",
-      "published_at": "2026-05-14T12:43:36.414Z",
+      "title": "WHO Confirms Andes Virus in Multi-country Hantavirus Cluster Linked to Cruise Ship",
+      "summary": "The World Health Organization confirmed that the hantavirus responsible for the cruise ship outbreak is Andes virus (ANDV), with cases reported from multiple countries across Europe and South America",
+      "source_name": "WHO",
+      "source_url": "https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON601",
+      "published_at": "2026-05-11T17:03:56.140Z",
       "is_disputed": 0,
       "is_unverified_claim": 0
     },
     {
       "id": "5",
-      "title": "France Confirms First Hantavirus Case of 2026",
-      "summary": "Single case detected; investigation ongoing for source of infection",
+      "title": "ECDC Assessment: Hantavirus-Associated Cluster of Illness on Cruise Ship",
+      "summary": "The European Centre for Disease Prevention and Control provides assessment and recommendations for the multi-country hantavirus outbreak linked to the MV Hondius cruise ship",
       "source_name": "ECDC",
-      "source_url": "https://www.ecdc.europa.eu",
-      "published_at": "2026-05-14T11:43:36.414Z",
+      "source_url": "https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and",
+      "published_at": "2026-05-11T17:03:56.140Z",
       "is_disputed": 0,
       "is_unverified_claim": 0
     }
   ],
-  "updated_at": "2026-05-14T16:43:36.416Z"
+  "updated_at": "2026-05-14T17:03:56.141Z"
 }
