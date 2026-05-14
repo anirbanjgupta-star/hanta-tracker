@@ -1,7 +1,8 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
+import { runAggregator } from '../server/aggregator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '../data');
@@ -130,7 +131,10 @@ async function getMeta() {
 
 async function refreshAllData() {
   try {
-    console.log('[API] Refreshing all data');
+    console.log('[API] Refreshing all data from live sources');
+
+    // Run the aggregator to pull fresh data from CDC, WHO, ECDC, etc.
+    await runAggregator();
 
     // Clear in-memory cache
     dataCache.cases = null;
@@ -142,7 +146,7 @@ async function refreshAllData() {
     // Clear KV cache
     await clearAllCache();
 
-    // Pre-load all data (which will read from files and populate both caches)
+    // Pre-load all data (which will now read the freshly aggregated files and populate both caches)
     await Promise.all([
       getCases(),
       getNews(),
