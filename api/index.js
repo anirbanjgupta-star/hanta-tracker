@@ -55,14 +55,10 @@ async function getCases() {
 }
 
 async function getNews() {
-  // Try KV first (for Vercel persistence)
-  const kvData = await getDataFromKV('news');
-  if (kvData) {
-    return kvData;
-  }
-
-  // Fallback to in-memory cache
+  // Read from file directly (skip KV cache due to stale data)
   const now = Date.now();
+
+  // Check in-memory cache
   if (dataCache.news && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.news;
   }
@@ -83,8 +79,6 @@ async function getNews() {
     const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
     dataCache.news = sorted;
     dataCache.lastRefresh = now;
-    // Store in KV for Vercel persistence
-    await setDataWithTTL('news', sorted, CACHE_TTL_SECONDS);
     return sorted;
   }
   return [];
