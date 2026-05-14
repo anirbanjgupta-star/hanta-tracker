@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, stat } from 'fs/promises';
 import http from 'http';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -244,9 +244,39 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: 'Not found' }));
     }
 
-    // 404
-    res.writeHead(404);
-    res.end(JSON.stringify({ error: 'Not found' }));
+    // Serve static files or index.html for SPA routing
+    const distPath = path.join(__dirname, 'client/dist');
+    let filePath = path.join(distPath, pathname === '/' ? 'index.html' : pathname);
+
+    try {
+      const stats = await stat(filePath);
+      if (stats.isFile()) {
+        const content = await readFile(filePath, 'utf-8');
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Content-Type', 'text/html');
+        } else if (filePath.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (filePath.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.json')) {
+          res.setHeader('Content-Type', 'application/json');
+        }
+        return res.end(content);
+      }
+    } catch (err) {
+      // File not found, serve index.html for client-side routing
+    }
+
+    // Serve index.html for SPA routing
+    try {
+      const indexPath = path.join(distPath, 'index.html');
+      const content = await readFile(indexPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      return res.end(content);
+    } catch (err) {
+      res.writeHead(404);
+      return res.end(JSON.stringify({ error: 'Not found' }));
+    }
   } catch (err) {
     console.error('Server error:', err);
     res.writeHead(500);
