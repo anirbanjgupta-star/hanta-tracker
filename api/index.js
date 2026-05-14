@@ -58,15 +58,26 @@ async function getCases() {
 }
 
 async function getNews() {
-  // Read from file directly (skip KV cache due to stale data)
   const now = Date.now();
 
-  // Check in-memory cache
+  // Check in-memory cache first
   if (dataCache.news && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.news;
   }
 
-  // Read from file
+  // Try KV cache (which might have been populated by refresh endpoint)
+  try {
+    const kvData = await getDataFromKV('news');
+    if (kvData && Array.isArray(kvData) && kvData.length > 0) {
+      dataCache.news = kvData;
+      dataCache.lastRefresh = now;
+      return kvData;
+    }
+  } catch (e) {
+    console.log('[INFO] KV cache unavailable, will try file');
+  }
+
+  // Read from file as fallback
   const data = await readDataFile('news_articles.json');
   if (data && Array.isArray(data.articles)) {
     const transformed = data.articles.map(a => ({
@@ -80,6 +91,9 @@ async function getNews() {
       is_unverified_claim: a.is_unverified_claim || 0,
     }));
     const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+
+    // Store in KV for next call
+    await setDataWithTTL('news', sorted, CACHE_TTL_SECONDS);
     dataCache.news = sorted;
     dataCache.lastRefresh = now;
     return sorted;
