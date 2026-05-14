@@ -1,27 +1,36 @@
 import { google } from 'googleapis';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
 
 const sheets = google.sheets('v4');
 
-// Parse private key properly
-const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, '\n');
+// Initialize auth lazily (when first needed)
+let auth = null;
+let SHEET_ID = null;
 
-// Initialize auth using JWT
-const auth = new google.auth.JWT({
-  email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-  key: privateKey,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+function getAuth() {
+  if (!auth) {
+    const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, '\n');
+    auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+      key: privateKey,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    SHEET_ID = process.env.GOOGLE_SHEET_ID;
+  }
+  return auth;
+}
 
-const SHEET_ID = process.env.GOOGLE_SHEET_ID;
+function getSheetId() {
+  if (!SHEET_ID) {
+    SHEET_ID = process.env.GOOGLE_SHEET_ID;
+  }
+  return SHEET_ID;
+}
 
 export async function readCasesFromSheet() {
   try {
     const response = await sheets.spreadsheets.values.get({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'Cases!A2:L',
     });
 
@@ -52,8 +61,8 @@ export async function readCasesFromSheet() {
 export async function readNewsFromSheet() {
   try {
     const response = await sheets.spreadsheets.values.get({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'News!A2:F',
     });
 
@@ -95,15 +104,15 @@ export async function writeCasesToSheet(cases) {
 
     // Clear existing data
     await sheets.spreadsheets.values.clear({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'Cases!A2:L',
     });
 
     // Write new data
     await sheets.spreadsheets.values.update({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'Cases!A2',
       valueInputOption: 'RAW',
       resource: {
@@ -132,15 +141,15 @@ export async function writeNewsToSheet(articles) {
 
     // Clear existing data
     await sheets.spreadsheets.values.clear({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'News!A2:F',
     });
 
     // Write new data
     await sheets.spreadsheets.values.update({
-      auth,
-      spreadsheetId: SHEET_ID,
+      auth: getAuth(),
+      spreadsheetId: getSheetId(),
       range: 'News!A2',
       valueInputOption: 'RAW',
       resource: {

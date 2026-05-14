@@ -1,9 +1,10 @@
 import './tokens.css';
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useOutbreakData } from './hooks/useOutbreakData';
 import { useDrillDown } from './hooks/useDrillDown';
 import { useNews } from './hooks/useNews';
 import { useGuidelines } from './hooks/useGuidelines';
+import { useVisitCounter } from './hooks/useVisitCounter';
 
 import DisclaimerBanner from './components/DisclaimerBanner';
 import Header from './components/Header';
@@ -11,12 +12,53 @@ import WorldMap from './components/WorldMap';
 import DetailPanel from './components/DetailPanel';
 import BottomPanel from './components/BottomPanel';
 import StatusBar from './components/StatusBar';
+import { VisitStatsModal } from './components/VisitStatsModal';
 
 export default function App() {
   const { cases, meta, loading } = useOutbreakData();
   const { selected, selectLocation, clearSelection } = useDrillDown();
   const { articles, filter: newsFilter, setFilter: setNewsFilter } = useNews();
   const { guidelines } = useGuidelines();
+  const { visitCount } = useVisitCounter();
+  const [showVisitStats, setShowVisitStats] = useState(false);
+
+  // Hotkey listener for Ctrl+Shift+N+S
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        // Listen for the next key (S)
+        const handleNextKey = (e2) => {
+          if (e2.key === 's' || e2.key === 'S') {
+            e2.preventDefault();
+            setShowVisitStats(true);
+            document.removeEventListener('keydown', handleNextKey);
+          } else {
+            document.removeEventListener('keydown', handleNextKey);
+          }
+        };
+        document.addEventListener('keydown', handleNextKey);
+        setTimeout(() => document.removeEventListener('keydown', handleNextKey), 1000);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setShowVisitStats(false);
+      }
+    };
+
+    if (showVisitStats) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showVisitStats]);
 
   const knownCases = cases.filter(c => c.total_cases != null);
   const globalCases = knownCases.length ? knownCases.reduce((s, c) => s + c.total_cases, 0) : null;
@@ -70,6 +112,12 @@ export default function App() {
       />
 
       <StatusBar meta={meta} />
+
+      <VisitStatsModal
+        isOpen={showVisitStats}
+        onClose={() => setShowVisitStats(false)}
+        visitCount={visitCount}
+      />
     </div>
   );
 }

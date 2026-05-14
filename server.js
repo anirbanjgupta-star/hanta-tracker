@@ -1,11 +1,15 @@
-import http from 'http';
+import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFile } from 'fs/promises';
-import { readCasesFromSheet, readNewsFromSheet } from './api/sheets-integration.js';
-import { startScheduler } from './refresh-scheduler.js';
+import { readFile, writeFile } from 'fs/promises';
+import http from 'http';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '.env.local') });
+
+const { readCasesFromSheet, readNewsFromSheet } = await import('./api/sheets-integration.js');
+const { startScheduler } = await import('./refresh-scheduler.js');
+
 const dataDir = path.join(__dirname, 'data');
 
 // In-memory cache
@@ -16,6 +20,7 @@ let dataCache = {
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const VISITS_FILE = path.join(dataDir, 'visits.json');
 
 async function readDataFile(filename) {
   try {
@@ -59,6 +64,26 @@ async function getCases() {
   }
 
   return [];
+}
+
+async function incrementVisitCount() {
+  try {
+    const current = await readDataFile('visits.json') || { total_visits: 0 };
+    const updated = {
+      total_visits: (current.total_visits || 0) + 1,
+      last_visit: new Date().toISOString()
+    };
+    await writeFile(VISITS_FILE, JSON.stringify(updated, null, 2));
+    return updated;
+  } catch (err) {
+    console.error('Error tracking visit:', err.message);
+    return null;
+  }
+}
+
+async function getVisitCount() {
+  const data = await readDataFile('visits.json');
+  return data || { total_visits: 0, last_visit: null };
 }
 
 async function getNews() {
@@ -134,6 +159,18 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    // /api/visits (track and get visit count)
+    if ((pathname === '/api/visits' || pathname === '/visits') && req.method === 'POST') {
+      const visits = await incrementVisitCount();
+      return res.end(JSON.stringify(visits || { error: 'Failed to track visit' }));
+    }
+
+    // /api/visits (get visit count)
+    if ((pathname === '/api/visits' || pathname === '/visits') && req.method === 'GET') {
+      const visits = await getVisitCount();
+      return res.end(JSON.stringify(visits));
+    }
+
     // /api/cases
     if ((pathname === '/api/cases' || pathname === '/cases') && req.method === 'GET') {
       const cases = await getCases();

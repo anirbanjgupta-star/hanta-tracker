@@ -4,16 +4,20 @@ export function useVisitCounter() {
   const [visitCount, setVisitCount] = useState(0);
 
   useEffect(() => {
-    // Get current visit count from localStorage
-    const stored = localStorage.getItem('hanta-visit-count');
-    const count = parseInt(stored || '0', 10);
-    
-    // Increment and save
-    const newCount = count + 1;
-    localStorage.setItem('hanta-visit-count', newCount.toString());
-    localStorage.setItem('hanta-last-visit', new Date().toISOString());
-    
-    setVisitCount(newCount);
+    // Track visit on page load
+    async function trackVisit() {
+      try {
+        const res = await fetch('/api/visits', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          setVisitCount(data.total_visits || 0);
+        }
+      } catch (err) {
+        console.error('Failed to track visit:', err);
+      }
+    }
+
+    trackVisit();
   }, []);
 
   return { visitCount };
