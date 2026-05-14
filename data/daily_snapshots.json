@@ -8,6 +8,14 @@
         "fatalities": 3,
         "confidence": "high",
         "alert_level": "WATCH"
+      },
+      {
+        "date": "2026-05-14",
+        "total_cases": 7,
+        "active_cases": 4,
+        "fatalities": 3,
+        "confidence": "high",
+        "alert_level": "WATCH"
       }
     ],
     "US": [
@@ -28,8 +36,16 @@
         "fatalities": 0,
         "confidence": "low",
         "alert_level": "WATCH"
+      },
+      {
+        "date": "2026-05-14",
+        "total_cases": 1,
+        "active_cases": 1,
+        "fatalities": 0,
+        "confidence": "low",
+        "alert_level": "WATCH"
       }
     ]
   },
-  "updated_at": "2026-05-13T20:45:07.481Z"
+  "updated_at": "2026-05-14T11:30:07.510Z"
 }

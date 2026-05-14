@@ -1,29 +1,37 @@
 {
   "cases": [
     {
-      "location_id": "ES",
-      "location_name": "Spain",
-      "lat": 40.463667,
-      "lng": -3.74922,
-      "level": "country",
-      "parent_id": null,
-      "total_cases": 1,
-      "active_cases": 1,
-      "fatalities": 0,
-      "transmission_rodent": 0.8,
-      "transmission_person": 0.2,
+      "location_id": "ES-CAN",
+      "location_name": "Tenerife",
+      "lat": 28.2935785,
+      "lng": -16.6214471,
+      "level": "region",
+      "parent_id": "ES",
+      "total_cases": 7,
+      "active_cases": 4,
+      "fatalities": 3,
+      "transmission_rodent": 0.85,
+      "transmission_person": 0.15,
       "source_urls": [
         {
           "source": "WHO",
-          "url": "https://www.who.int/news/item/09-05-2026-hantavirus-outbreak-in-spain-public-health-alert",
-          "published_at": "2026-05-09T00:00:00.000Z"
+          "url": "https://www.who.int/news/item/09-05-2026-message-by-the-who-director-general-to-the-people-of-tenerife-regarding-the-hantavirus-response",
+          "published_at": "Sat, 09 May 2026 11:14:23 Z"
+        },
+        {
+          "source": "ECDC",
+          "url": "https://www.ecdc.europa.eu/en/hantavirus-infection",
+          "published_at": "2026-05-07T00:00:00.000Z"
         }
       ],
-      "sources": ["WHO"],
+      "sources": [
+        "WHO",
+        "ECDC"
+      ],
       "confidence": "high",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T14:00:00.000Z"
+      "last_updated": "2026-05-14T11:30:07.507Z"
     },
     {
       "location_id": "FR",
@@ -33,73 +41,25 @@
       "level": "country",
       "parent_id": null,
       "total_cases": 1,
-      "active_cases": 0,
-      "fatalities": 1,
-      "transmission_rodent": 0.0,
-      "transmission_person": 1.0,
-      "source_urls": [
-        {
-          "source": "ECDC",
-          "url": "https://www.ecdc.europa.eu/en/hantavirus-infection",
-          "published_at": "2026-05-11T00:00:00.000Z"
-        }
-      ],
-      "sources": ["ECDC"],
-      "confidence": "high",
-      "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T14:00:00.000Z"
-    },
-    {
-      "location_id": "NL",
-      "location_name": "Netherlands",
-      "lat": 52.1326,
-      "lng": 5.2913,
-      "level": "country",
-      "parent_id": null,
-      "total_cases": 2,
-      "active_cases": 1,
-      "fatalities": 1,
-      "transmission_rodent": 0.9,
-      "transmission_person": 0.1,
-      "source_urls": [
-        {
-          "source": "ECDC",
-          "url": "https://www.ecdc.europa.eu/en/news-events/andes-hantavirus-outbreak",
-          "published_at": "2026-05-12T00:00:00.000Z"
-        }
-      ],
-      "sources": ["ECDC"],
-      "confidence": "high",
-      "conflict_flag": 0,
-      "alert_level": "WATCH",
-      "last_updated": "2026-05-14T14:00:00.000Z"
-    },
-    {
-      "location_id": "US",
-      "location_name": "United States",
-      "lat": 37.0902,
-      "lng": -95.7129,
-      "level": "country",
-      "parent_id": null,
-      "total_cases": 1,
       "active_cases": 1,
       "fatalities": 0,
-      "transmission_rodent": 1.0,
-      "transmission_person": 0.0,
+      "transmission_rodent": 0,
+      "transmission_person": 1,
       "source_urls": [
         {
-          "source": "CDC",
-          "url": "https://www.cdc.gov/hantavirus/hps/index.html",
-          "published_at": "2026-05-13T00:00:00.000Z"
+          "source": "ECDC",
+          "url": "https://www.ecdc.europa.eu/en/news-events/andes-hantavirus-outbreak-ecdc-continues-working-frontline-support-eu-member-states",
+          "published_at": "2026-05-11T14:39:45.000Z"
         }
       ],
-      "sources": ["CDC"],
-      "confidence": "high",
+      "sources": [
+        "ECDC"
+      ],
+      "confidence": "low",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T14:00:00.000Z"
+      "last_updated": "2026-05-14T11:30:07.510Z"
     }
   ],
-  "updated_at": "2026-05-14T14:00:00.000Z"
+  "updated_at": "2026-05-14T11:30:07.511Z"
 }
