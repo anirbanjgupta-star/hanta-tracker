@@ -251,7 +251,12 @@ export default async (req, res) => {
     }
 
     // 404
-    res.status(404).end(JSON.stringify({ error: 'Not found' }));
+    console.log(`[API] 404: ${req.method} ${pathname}`);
+    res.status(404).end(JSON.stringify({
+      error: 'Not found',
+      path: pathname,
+      method: req.method
+    }));
   } catch (err) {
     console.error('API error:', err);
     res.status(500).end(JSON.stringify({ error: 'Internal server error' }));
