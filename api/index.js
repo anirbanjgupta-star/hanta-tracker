@@ -1,15 +1,12 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFile } from 'fs/promises';
-import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
-import { loadNews } from './data-news.js';
-import { newsArticles } from './news-data.js';
+import { readCasesFromSheet, readNewsFromSheet } from './sheets-integration.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.resolve(__dirname, '../data');
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
-const CACHE_TTL_SECONDS = 5 * 60; // 5 minutes in seconds for KV
 
 // In-memory cache (fallback for local development)
 let dataCache = {
@@ -23,154 +20,118 @@ let dataCache = {
 async function readDataFile(filename) {
   try {
     const filePath = path.join(dataDir, filename);
-    console.log(`[DEBUG] Reading ${filename} from ${filePath}`);
     const content = await readFile(filePath, 'utf-8');
-    const data = JSON.parse(content);
-    console.log(`[DEBUG] Successfully read ${filename}, size: ${content.length} bytes`);
-    return data;
+    return JSON.parse(content);
   } catch (err) {
-    console.error(`[ERROR] Failed to read ${filename} from ${filePath}:`, err.message);
+    console.error(`[ERROR] Failed to read ${filename}:`, err.message);
     return null;
   }
 }
 
 async function getCases() {
-  // Try KV first (for Vercel persistence)
-  const kvData = await getDataFromKV('cases');
-  if (kvData) {
-    return kvData;
-  }
-
-  // Fallback to in-memory cache
   const now = Date.now();
+
+  // Return cached data if still valid
   if (dataCache.cases && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.cases;
   }
 
-  // Read from file
+  // Try Google Sheets first
+  try {
+    console.log('[API] Fetching cases from Google Sheets...');
+    const cases = await readCasesFromSheet();
+    if (cases && cases.length > 0) {
+      dataCache.cases = cases;
+      dataCache.lastRefresh = now;
+      console.log(`[API] ✓ Loaded ${cases.length} cases from Google Sheets`);
+      return cases;
+    }
+  } catch (err) {
+    console.error('[API] Error reading from Google Sheets, falling back to local files');
+  }
+
+  // Fall back to local files
   const data = await readDataFile('cases.json');
   if (data && data.cases) {
     dataCache.cases = data.cases;
     dataCache.lastRefresh = now;
-    // Store in KV for Vercel persistence
-    await setDataWithTTL('cases', data.cases, CACHE_TTL_SECONDS);
-    return dataCache.cases;
+    console.log(`[API] ✓ Loaded ${data.cases.length} cases from local files`);
+    return data.cases;
   }
+
   return [];
 }
 
 async function getNews() {
   const now = Date.now();
 
-  // Check in-memory cache first
+  // Return cached data if still valid
   if (dataCache.news && now - dataCache.lastRefresh < CACHE_TTL) {
     return dataCache.news;
   }
 
-  // Try KV cache (which might have been populated by refresh endpoint)
+  // Try Google Sheets first
   try {
-    const kvData = await getDataFromKV('news');
-    if (kvData && Array.isArray(kvData) && kvData.length > 0) {
-      dataCache.news = kvData;
+    console.log('[API] Fetching news from Google Sheets...');
+    const articles = await readNewsFromSheet();
+    if (articles && articles.length > 0) {
+      // Transform to match API format
+      const transformed = articles.map(a => ({
+        id: a.id,
+        title: a.title,
+        summary: a.summary,
+        source: a.source_name,
+        url: a.source_url,
+        published_at: a.published_at,
+        is_disputed: a.is_disputed || 0,
+        is_unverified_claim: a.is_unverified_claim || 0,
+      }));
+      const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+      dataCache.news = sorted;
       dataCache.lastRefresh = now;
-      return kvData;
+      console.log(`[API] ✓ Loaded ${articles.length} articles from Google Sheets`);
+      return sorted;
     }
-  } catch (e) {
-    console.log('[INFO] KV cache unavailable, will use embedded data');
+  } catch (err) {
+    console.error('[API] Error reading from Google Sheets, falling back to local files');
   }
 
-  // Use embedded news articles (generated during build)
-  if (newsArticles && newsArticles.length > 0) {
-    console.log(`[INFO] Using embedded news data with ${newsArticles.length} articles`);
-    dataCache.news = newsArticles;
+  // Fall back to local files
+  const data = await readDataFile('news_articles.json');
+  if (data && Array.isArray(data.articles)) {
+    const transformed = data.articles.map(a => ({
+      id: a.id || Math.random().toString(36).substr(2, 9),
+      title: a.title,
+      summary: a.summary || a.description || '',
+      source: a.source_name || a.source || 'News',
+      url: a.source_url || a.url || '',
+      published_at: a.published_at,
+      is_disputed: a.is_disputed || 0,
+      is_unverified_claim: a.is_unverified_claim || 0,
+    }));
+    const sorted = transformed.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    dataCache.news = sorted;
     dataCache.lastRefresh = now;
-    // Store in KV for next call
-    await setDataWithTTL('news', newsArticles, CACHE_TTL_SECONDS);
-    return newsArticles;
-  }
-
-  // Fallback to file loading
-  try {
-    const newsData = await loadNews();
-    if (newsData && newsData.length > 0) {
-      dataCache.news = newsData;
-      dataCache.lastRefresh = now;
-      await setDataWithTTL('news', newsData, CACHE_TTL_SECONDS);
-      return newsData;
-    }
-  } catch (e) {
-    console.error('[ERROR] loadNews failed:', e.message);
+    console.log(`[API] ✓ Loaded ${data.articles.length} articles from local files`);
+    return sorted;
   }
 
   return [];
 }
 
 async function getGuidelines() {
-  // Try KV first
-  const kvData = await getDataFromKV('guidelines');
-  if (kvData) {
-    return kvData;
-  }
-
-  // Read from file
   const data = await readDataFile('guidelines.json');
-  if (data) {
-    // Store in KV for Vercel persistence
-    await setDataWithTTL('guidelines', data, CACHE_TTL_SECONDS);
-    return data;
-  }
-  return null;
+  return data;
 }
 
 async function getMeta() {
-  // Try KV first
-  const kvData = await getDataFromKV('meta');
-  if (kvData) {
-    return kvData;
-  }
-
-  // Read from file
   const data = await readDataFile('meta.json');
-  const result = data || {
+  return data || {
     last_updated: new Date().toISOString(),
     source_status: {},
     stale: false,
     flagged_count: 0
   };
-
-  // Store in KV for Vercel persistence
-  await setDataWithTTL('meta', result, CACHE_TTL_SECONDS);
-  return result;
-}
-
-async function refreshAllData() {
-  try {
-    console.log('[API] Refreshing cache from data files');
-
-    // Clear in-memory cache
-    dataCache.cases = null;
-    dataCache.news = null;
-    dataCache.guidelines = null;
-    dataCache.meta = null;
-    dataCache.lastRefresh = 0;
-
-    // Clear KV cache
-    await clearAllCache();
-
-    // Pre-load all data (which will read from files and populate both caches)
-    await Promise.all([
-      getCases(),
-      getNews(),
-      getGuidelines(),
-      getMeta()
-    ]);
-
-    console.log('[API] Cache refresh complete');
-    return true;
-  } catch (err) {
-    console.error('[API] Cache refresh failed:', err);
-    return false;
-  }
 }
 
 export default async (req, res) => {
@@ -197,7 +158,7 @@ export default async (req, res) => {
     // Route: /api/meta
     if ((pathname === '/api/meta' || pathname === '/meta') && req.method === 'GET') {
       const meta = await getMeta();
-      return res.status(200).end(JSON.stringify(meta));
+      return res.status(200).end(JSON.stringify(meta || {}));
     }
 
     // Route: /api/guidelines
@@ -218,29 +179,10 @@ export default async (req, res) => {
       return res.status(200).end(JSON.stringify({ ok: true, time: new Date().toISOString() }));
     }
 
-    // Route: /api/refresh (triggered by cron or on-demand)
-    if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'POST') {
-      const success = await refreshAllData();
-      return res.status(success ? 200 : 500).end(JSON.stringify({
-        success,
-        message: success ? 'Cache refreshed successfully' : 'Cache refresh failed',
-        timestamp: new Date().toISOString()
-      }));
-    }
-
-    // Route: /api/stream
-    if ((pathname === '/api/stream' || pathname === '/stream') && req.method === 'GET') {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
-      return setTimeout(() => res.end(), 100);
-    }
-
     // Route: /api/cases/:locationId
-    const casesMatch = pathname.match(/^\/(?:api\/)?cases\/([a-z0-9-]+)$/);
+    const casesMatch = pathname.match(/^\/(?:api\/)?cases\/([a-zA-Z0-9-]+)$/i);
     if (casesMatch && req.method === 'GET') {
-      const locationId = casesMatch[1];
+      const locationId = casesMatch[1].toUpperCase();
       const allCases = await getCases();
       const found = allCases.find(c => c.location_id === locationId);
       if (!found) {
@@ -251,9 +193,9 @@ export default async (req, res) => {
     }
 
     // Route: /api/trend/:locationId
-    const trendMatch = pathname.match(/^\/(?:api\/)?trend\/([a-z0-9-]+)$/);
+    const trendMatch = pathname.match(/^\/(?:api\/)?trend\/([a-zA-Z0-9-]+)$/i);
     if (trendMatch && req.method === 'GET') {
-      const locationId = trendMatch[1];
+      const locationId = trendMatch[1].toUpperCase();
       try {
         const snapshots = await readDataFile('daily_snapshots.json');
         if (snapshots && snapshots[locationId]) {

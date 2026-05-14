@@ -1,6 +1,26 @@
 {
   "cases": [
     {
+      "location_id": "US",
+      "location_name": "United States",
+      "lat": 37.0902,
+      "lng": -95.7129,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 890,
+      "active_cases": 45,
+      "fatalities": 38,
+      "transmission_rodent": 1,
+      "transmission_person": 0,
+      "sources": [
+        "CDC"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T16:43:36.409Z"
+    },
+    {
       "location_id": "ES-CAN",
       "location_name": "Tenerife",
       "lat": 28.2935785,
@@ -12,18 +32,6 @@
       "fatalities": 3,
       "transmission_rodent": 0.85,
       "transmission_person": 0.15,
-      "source_urls": [
-        {
-          "source": "WHO",
-          "url": "https://www.who.int/news/item/09-05-2026-message-by-the-who-director-general-to-the-people-of-tenerife-regarding-the-hantavirus-response",
-          "published_at": "Sat, 09 May 2026 11:14:23 Z"
-        },
-        {
-          "source": "ECDC",
-          "url": "https://www.ecdc.europa.eu/en/hantavirus-infection",
-          "published_at": "2026-05-07T00:00:00.000Z"
-        }
-      ],
       "sources": [
         "WHO",
         "ECDC"
@@ -31,7 +39,27 @@
       "confidence": "high",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T15:38:08.222Z"
+      "last_updated": "2026-05-14T16:43:36.414Z"
+    },
+    {
+      "location_id": "NL",
+      "location_name": "Netherlands",
+      "lat": 52.1326,
+      "lng": 5.2913,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 12,
+      "active_cases": 8,
+      "fatalities": 1,
+      "transmission_rodent": 0.9,
+      "transmission_person": 0.1,
+      "sources": [
+        "ECDC"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T16:43:36.414Z"
     },
     {
       "location_id": "FR",
@@ -45,21 +73,34 @@
       "fatalities": 0,
       "transmission_rodent": 0,
       "transmission_person": 1,
-      "source_urls": [
-        {
-          "source": "ECDC",
-          "url": "https://www.ecdc.europa.eu/en/news-events/andes-hantavirus-outbreak-ecdc-continues-working-frontline-support-eu-member-states",
-          "published_at": "2026-05-11T14:39:45.000Z"
-        }
-      ],
       "sources": [
         "ECDC"
       ],
-      "confidence": "low",
+      "confidence": "medium",
       "conflict_flag": 0,
       "alert_level": "WATCH",
-      "last_updated": "2026-05-14T15:38:08.224Z"
+      "last_updated": "2026-05-14T16:43:36.414Z"
+    },
+    {
+      "location_id": "SE",
+      "location_name": "Sweden",
+      "lat": 60.1282,
+      "lng": 18.6435,
+      "level": "country",
+      "parent_id": null,
+      "total_cases": 8,
+      "active_cases": 5,
+      "fatalities": 2,
+      "transmission_rodent": 0.95,
+      "transmission_person": 0.05,
+      "sources": [
+        "ECDC"
+      ],
+      "confidence": "high",
+      "conflict_flag": 0,
+      "alert_level": "WATCH",
+      "last_updated": "2026-05-14T16:43:36.414Z"
     }
   ],
-  "updated_at": "2026-05-14T15:38:08.225Z"
+  "updated_at": "2026-05-14T16:43:36.414Z"
 }
