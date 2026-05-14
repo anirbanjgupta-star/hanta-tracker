@@ -209,12 +209,24 @@ export default async (req, res) => {
 
     // Route: /api/refresh (triggered by cron or on-demand)
     if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'POST') {
-      const success = await refreshAllData();
-      return res.status(success ? 200 : 500).end(JSON.stringify({
-        success,
-        message: success ? 'Data refreshed successfully' : 'Data refresh failed',
-        timestamp: new Date().toISOString()
-      }));
+      console.log('[API] Refresh request received');
+      try {
+        const success = await refreshAllData();
+        const result = {
+          success,
+          message: success ? 'Data refreshed successfully' : 'Data refresh failed',
+          timestamp: new Date().toISOString()
+        };
+        console.log('[API] Refresh response:', result);
+        return res.status(success ? 200 : 500).end(JSON.stringify(result));
+      } catch (refreshErr) {
+        console.error('[API] Refresh error:', refreshErr.message);
+        return res.status(500).end(JSON.stringify({
+          success: false,
+          message: 'Refresh error: ' + refreshErr.message,
+          timestamp: new Date().toISOString()
+        }));
+      }
     }
 
     // Route: /api/stream
