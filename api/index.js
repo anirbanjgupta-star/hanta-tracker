@@ -4,7 +4,7 @@ import { readFile } from 'fs/promises';
 import { getDataFromKV, setDataWithTTL, deleteFromKV, clearAllCache } from './lib/kv.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(__dirname, '../data');
+const dataDir = path.resolve(__dirname, '../data');
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 const CACHE_TTL_SECONDS = 5 * 60; // 5 minutes in seconds for KV
@@ -21,10 +21,13 @@ let dataCache = {
 async function readDataFile(filename) {
   try {
     const filePath = path.join(dataDir, filename);
+    console.log(`[DEBUG] Reading ${filename} from ${filePath}`);
     const content = await readFile(filePath, 'utf-8');
-    return JSON.parse(content);
+    const data = JSON.parse(content);
+    console.log(`[DEBUG] Successfully read ${filename}, size: ${content.length} bytes`);
+    return data;
   } catch (err) {
-    console.error(`Failed to read ${filename}:`, err);
+    console.error(`[ERROR] Failed to read ${filename} from ${filePath}:`, err.message);
     return null;
   }
 }
