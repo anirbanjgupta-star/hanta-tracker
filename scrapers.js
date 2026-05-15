@@ -184,12 +184,39 @@ async function fetchCDCData() {
   }
 }
 
-// Fetch news from multiple sources
+// Fetch news from NewsAPI and WHO
 async function fetchNewsData() {
   try {
     console.log('Fetching news articles...');
 
-    // Real news articles about May 2026 Hantavirus outbreak
+    // Try fetching from NewsAPI first
+    const newsApiKey = process.env.NEWS_API_KEY;
+    let articles = [];
+
+    if (newsApiKey) {
+      try {
+        const newsUrl = `https://newsapi.org/v2/everything?q=hantavirus&sortBy=publishedAt&language=en&pageSize=10&apiKey=${newsApiKey}`;
+        const newsResponse = await httpsGet(newsUrl);
+        if (newsResponse && newsResponse.articles) {
+          articles = newsResponse.articles.slice(0, 5).map((a, i) => ({
+            id: `api-${i}`,
+            title: a.title,
+            summary: a.description || a.content || '',
+            source_name: a.source.name,
+            source_url: a.url,
+            published_at: a.publishedAt,
+            is_disputed: 0,
+            is_unverified_claim: 0
+          }));
+          console.log(`✓ Fetched ${articles.length} articles from NewsAPI`);
+          return { articles };
+        }
+      } catch (err) {
+        console.warn('NewsAPI fetch failed, using fallback data');
+      }
+    }
+
+    // Fallback: Real news articles about May 2026 Hantavirus outbreak
     return {
       articles: [
         {
