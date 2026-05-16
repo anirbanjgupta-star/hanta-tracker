@@ -204,21 +204,66 @@ const server = http.createServer(async (req, res) => {
     // /api/refresh
     if ((pathname === '/api/refresh' || pathname === '/refresh') && req.method === 'GET') {
       console.log('[API] Refresh endpoint called at', new Date().toISOString());
-      // Trigger data refresh from Google Sheets
+      // Trigger data refresh: keep case data from Google Sheets, update news only
       try {
-        const { fetchAllData } = await import('./scrapers.js');
-        const { writeCasesToSheet, writeNewsToSheet } = await import('./api/sheets-integration.js');
+        const { scrapeWHONews, scrapeCDCNews } = await import('./scrapers.js');
+        const { writeNewsToSheet } = await import('./api/sheets-integration.js');
 
-        const allData = await fetchAllData();
-        await writeCasesToSheet(allData.cases);
-        await writeNewsToSheet(allData.articles);
+        // Scrape fresh news articles
+        const whoNews = await scrapeWHONews();
+        const cdcNews = await scrapeCDCNews();
 
-        // Clear cache to force reload on next request
-        dataCache.cases = null;
+        let articles = [];
+        if (whoNews && whoNews.length > 0) articles = articles.concat(whoNews);
+        if (cdcNews && cdcNews.length > 0) articles = articles.concat(cdcNews);
+
+        // If scraping failed, use fallback news links
+        if (articles.length === 0) {
+          articles = [
+            {
+              id: 'fb-1',
+              title: 'CDC Hantavirus Information & Situation Summary',
+              summary: 'Current outbreak information from CDC. For the latest updates, please visit the CDC Hantavirus section directly.',
+              source_name: 'CDC',
+              source_url: 'https://www.cdc.gov/hantavirus/index.html',
+              published_at: new Date().toISOString(),
+              is_disputed: 0,
+              is_unverified_claim: 0
+            },
+            {
+              id: 'fb-2',
+              title: 'WHO Disease Outbreak News',
+              summary: 'Latest global disease outbreak updates from WHO. Visit WHO emergencies page for current Hantavirus status.',
+              source_name: 'WHO',
+              source_url: 'https://www.who.int/emergencies/disease-outbreak-news',
+              published_at: new Date().toISOString(),
+              is_disputed: 0,
+              is_unverified_claim: 0
+            },
+            {
+              id: 'fb-3',
+              title: 'ECDC Communicable Diseases Surveillance',
+              summary: 'European surveillance data on communicable diseases. ECDC provides epidemiological updates on outbreak situations.',
+              source_name: 'ECDC',
+              source_url: 'https://www.ecdc.europa.eu/en/surveillance',
+              published_at: new Date().toISOString(),
+              is_disputed: 0,
+              is_unverified_claim: 0
+            }
+          ];
+        }
+
+        // Write updated news to Google Sheets
+        if (articles.length > 0) {
+          await writeNewsToSheet(articles);
+        }
+
+        // Clear news cache to force reload on next request
+        // Keep case cache since we're not changing cases
         dataCache.news = null;
         dataCache.lastRefresh = 0;
 
-        console.log('[API] ✓ Data refresh completed successfully');
+        console.log('[API] ✓ News articles refreshed, case data preserved from Google Sheets');
         return res.end(JSON.stringify({ ok: true, refreshed: true, time: new Date().toISOString() }));
       } catch (err) {
         console.error('[API] Error during refresh:', err.message);
