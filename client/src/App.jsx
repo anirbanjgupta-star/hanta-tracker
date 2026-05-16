@@ -22,18 +22,38 @@ export default function App() {
   const { visitCount } = useVisitCounter();
   const [showVisitStats, setShowVisitStats] = useState(false);
 
-  // Hotkey listener for Shift+V
+  // Hotkey listener for Shift+V (visits) and Shift+R (refresh)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.shiftKey && (e.key === 'V' || e.key === 'v')) {
         e.preventDefault();
         setShowVisitStats(true);
       }
+      if (e.shiftKey && (e.key === 'R' || e.key === 'r')) {
+        e.preventDefault();
+        refreshData();
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const refreshData = async () => {
+    try {
+      const response = await fetch('/api/refresh');
+      const data = await response.json();
+      if (data.ok) {
+        alert('✓ Data refreshed successfully');
+        // Reload case and news data
+        window.location.reload();
+      } else {
+        alert('⚠ Refresh failed: ' + data.error);
+      }
+    } catch (err) {
+      alert('⚠ Refresh error: ' + err.message);
+    }
+  };
 
   // Close modal on Escape key
   useEffect(() => {
