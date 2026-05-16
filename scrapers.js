@@ -2,6 +2,7 @@ import https from 'https';
 import { writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import * as cheerio from 'cheerio';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,16 @@ function httpsGet(url) {
           resolve(null);
         }
       });
+    }).on('error', reject);
+  });
+}
+
+function httpsGetHTML(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { timeout: 15000 }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
     }).on('error', reject);
   });
 }
@@ -212,74 +223,128 @@ async function fetchCDCData() {
   }
 }
 
+// Scrape real news from WHO Disease Outbreak News
+async function scrapeWHONews() {
+  try {
+    console.log('Scraping WHO Disease Outbreak News...');
+    const whoUrl = 'https://www.who.int/emergencies/disease-outbreak-news';
+    const html = await httpsGetHTML(whoUrl);
+    const $ = cheerio.load(html);
+
+    const articles = [];
+    // WHO news items are typically in article links
+    $('a[href*="/emergencies/disease-outbreak-news/item/"]').slice(0, 3).each((i, el) => {
+      const title = $(el).text().trim();
+      const url = 'https://www.who.int' + $(el).attr('href');
+      if (title && title.length > 10) {
+        articles.push({
+          id: `who-${i}`,
+          title: title,
+          summary: 'Latest WHO disease outbreak news update',
+          source_name: 'WHO',
+          source_url: url,
+          published_at: new Date().toISOString(),
+          is_disputed: 0,
+          is_unverified_claim: 0
+        });
+      }
+    });
+
+    return articles.length > 0 ? articles : null;
+  } catch (err) {
+    console.warn('WHO scrape failed:', err.message);
+    return null;
+  }
+}
+
+// Scrape real news from CDC Hantavirus page
+async function scrapeCDCNews() {
+  try {
+    console.log('Scraping CDC Hantavirus news...');
+    const cdcUrl = 'https://www.cdc.gov/hantavirus/index.html';
+    const html = await httpsGetHTML(cdcUrl);
+    const $ = cheerio.load(html);
+
+    const articles = [];
+    // Look for news items and press releases on CDC page
+    $('a').slice(0, 5).each((i, el) => {
+      const title = $(el).text().trim();
+      const href = $(el).attr('href');
+      if (title && title.includes('Hantavirus') && href) {
+        const url = href.startsWith('http') ? href : 'https://www.cdc.gov' + href;
+        articles.push({
+          id: `cdc-${i}`,
+          title: title,
+          summary: 'Latest CDC Hantavirus surveillance and guidance',
+          source_name: 'CDC',
+          source_url: url,
+          published_at: new Date().toISOString(),
+          is_disputed: 0,
+          is_unverified_claim: 0
+        });
+      }
+    });
+
+    return articles.length > 0 ? articles : null;
+  } catch (err) {
+    console.warn('CDC scrape failed:', err.message);
+    return null;
+  }
+}
+
 // Fetch news from WHO and CDC official sources
 async function fetchNewsData() {
   try {
     console.log('Fetching news articles from official sources...');
 
-    // Try WHO Disease Outbreak News API
     let articles = [];
 
-    try {
-      const whoUrl = 'https://www.who.int/feeds/entity/csr/don/en/feed/xml';
-      // WHO publishes RSS feeds for disease outbreak news
-      console.log('Attempting to fetch from WHO Disease Outbreak News...');
-      // Note: Full RSS parsing would require additional dependencies
-    } catch (err) {
-      console.warn('WHO feed unavailable');
+    // Try scraping WHO news first
+    const whoNews = await scrapeWHONews();
+    if (whoNews && whoNews.length > 0) {
+      articles = articles.concat(whoNews);
+      console.log(`✓ Got ${whoNews.length} articles from WHO`);
+    }
+
+    // Try scraping CDC news
+    const cdcNews = await scrapeCDCNews();
+    if (cdcNews && cdcNews.length > 0) {
+      articles = articles.concat(cdcNews);
+      console.log(`✓ Got ${cdcNews.length} articles from CDC`);
     }
 
     // Fallback: Official news from CDC, WHO, and ECDC about actual outbreak
     // These are real articles from May 2026 outbreak documentation
     if (articles.length === 0) {
+      // Fallback articles when live scraping unavailable
       articles = [
         {
-          id: '1',
-          title: 'CDC Issues Advisory on Hantavirus Cluster Linked to Cruise Ship',
-          summary: 'The CDC issued guidance on the Andes virus cluster identified aboard the MV Hondius cruise ship, with 11 confirmed cases and 3 deaths reported as of May 13, 2026',
+          id: 'fb-1',
+          title: 'CDC Hantavirus Information & Situation Summary',
+          summary: 'Current outbreak information from CDC. For the latest updates, please visit the CDC Hantavirus section directly.',
           source_name: 'CDC',
-          source_url: 'https://www.cdc.gov/han/php/notices/han00528.html',
-          published_at: new Date(Date.now() - 172800000).toISOString(),
+          source_url: 'https://www.cdc.gov/hantavirus/index.html',
+          published_at: new Date().toISOString(),
           is_disputed: 0,
           is_unverified_claim: 0
         },
         {
-          id: '2',
-          title: 'France Confirms New Hantavirus Case in Woman Evacuated from Cruise Ship',
-          summary: 'France has confirmed a hantavirus case in a woman who became symptomatic during repatriation after disembarking from the MV Hondius',
-          source_name: 'Euronews',
-          source_url: 'https://www.euronews.com/health/2026/05/11/hantavirus-outbreak-latest-france-confirms-new-case-in-a-woman-evacuated-from-the-ship',
-          published_at: new Date(Date.now() - 172800000).toISOString(),
-          is_disputed: 0,
-          is_unverified_claim: 0
-        },
-        {
-          id: '3',
-          title: 'Spain Confirms Hantavirus Case Amongst Cruise Ship Evacuees',
-          summary: 'Spain has confirmed one new hantavirus case in a person tested upon arrival following evacuation from the MV Hondius cruise ship',
-          source_name: 'Euronews',
-          source_url: 'https://www.euronews.com/health/2026/05/11/hantavirus-outbreak-latest-spain-confirms-one-new-case-amongst-evacuees',
-          published_at: new Date(Date.now() - 172800000).toISOString(),
-          is_disputed: 0,
-          is_unverified_claim: 0
-        },
-        {
-          id: '4',
-          title: 'WHO Confirms Andes Virus in Multi-country Hantavirus Cluster Linked to Cruise Ship',
-          summary: 'The World Health Organization confirmed that the hantavirus responsible for the cruise ship outbreak is Andes virus (ANDV), with cases reported from multiple countries across Europe and South America',
+          id: 'fb-2',
+          title: 'WHO Disease Outbreak News',
+          summary: 'Latest global disease outbreak updates from WHO. Visit WHO emergencies page for current Hantavirus status.',
           source_name: 'WHO',
-          source_url: 'https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON601',
-          published_at: new Date(Date.now() - 259200000).toISOString(),
+          source_url: 'https://www.who.int/emergencies/disease-outbreak-news',
+          published_at: new Date().toISOString(),
           is_disputed: 0,
           is_unverified_claim: 0
         },
         {
-          id: '5',
-          title: 'ECDC Assessment: Hantavirus-Associated Cluster of Illness on Cruise Ship',
-          summary: 'The European Centre for Disease Prevention and Control provides assessment and recommendations for the multi-country hantavirus outbreak linked to the MV Hondius cruise ship',
+          id: 'fb-3',
+          title: 'ECDC Communicable Diseases Surveillance',
+          summary: 'European surveillance data on communicable diseases. ECDC provides epidemiological updates on outbreak situations.',
           source_name: 'ECDC',
-          source_url: 'https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and',
-          published_at: new Date(Date.now() - 259200000).toISOString(),
+          source_url: 'https://www.ecdc.europa.eu/en/surveillance',
+          published_at: new Date().toISOString(),
           is_disputed: 0,
           is_unverified_claim: 0
         }

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
     "google-auth-library": "^10.6.2",
     "googleapis": "^171.4.0",
