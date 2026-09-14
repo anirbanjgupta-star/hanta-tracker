@@ -1,0 +1,12 @@
+{
+  "name": "@relay/adapter-claude-code",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@relay/core": "0.1.0",
+    "@relay/cli": "0.1.0",
+    "@relay/mcp": "0.1.0"
+  }
+}
