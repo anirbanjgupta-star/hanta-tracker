@@ -47,6 +47,22 @@ describe('runInit', () => {
     expect(result.detectedRuleFiles).toContain('CLAUDE.md');
   });
 
+  it('installs the Claude Code adapter when CLAUDE.md is present', () => {
+    repo = makeScratchRepo();
+    writeFileSync(join(repo.dir, 'CLAUDE.md'), '# rules');
+    const result = runInit(repo.dir);
+    expect(result.claudeCodeAdapterInstalled).toBe(true);
+    expect(existsSync(join(repo.dir, '.claude/settings.json'))).toBe(true);
+    expect(existsSync(join(repo.dir, '.mcp.json'))).toBe(true);
+  });
+
+  it('does not install the Claude Code adapter when CLAUDE.md is absent', () => {
+    repo = makeScratchRepo();
+    const result = runInit(repo.dir);
+    expect(result.claudeCodeAdapterInstalled).toBe(false);
+    expect(existsSync(join(repo.dir, '.claude/settings.json'))).toBe(false);
+  });
+
   it('writes a CI workflow only when the remote is on github.com', () => {
     repo = makeScratchRepo();
     execSync('git remote add origin https://github.com/example/repo.git', { cwd: repo.dir });

@@ -32,6 +32,7 @@ program.command('init').action(guarded(() => {
   const detected = result.detectedRuleFiles.length > 0 ? ` Detected: ${result.detectedRuleFiles.join(', ')}.` : '';
   console.log(`Tier ${result.tier} reached.${detected}`);
   console.log(result.ciWorkflowWritten ? 'CI workflow written.' : 'No GitHub remote — CI workflow skipped.');
+  console.log(result.claudeCodeAdapterInstalled ? 'Claude Code adapter installed.' : 'Claude Code not detected — adapter not installed.');
 }));
 
 program.command('new')

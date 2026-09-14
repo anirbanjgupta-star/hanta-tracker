@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import {
   intentTemplate, specTemplate, planTemplate,
   defaultConfigYaml, defaultRolesYaml, ciWorkflowYaml,
@@ -10,7 +11,21 @@ export interface InitResult {
   tier: 0 | 1;
   detectedRuleFiles: string[];
   ciWorkflowWritten: boolean;
+  claudeCodeAdapterInstalled: boolean;
 }
+
+// @relay/adapter-claude-code depends on @relay/cli/lib (for runStatus etc.),
+// so a static/dynamic ESM import of it here — which TypeScript must resolve
+// at compile time — would make @relay/cli's own build depend on
+// @relay/adapter-claude-code already being built, a genuine cycle: neither
+// package could ever build first. require() returns `any`, so TypeScript
+// never needs the adapter's declaration file to exist; the actual lookup
+// happens at runtime via Node's normal module resolution, by which point
+// both packages are already built.
+interface ClaudeCodeAdapterModule {
+  installClaudeCodeAdapter(targetRepoDir: string): unknown;
+}
+const require = createRequire(import.meta.url);
 
 const RULE_FILES = ['CLAUDE.md', '.cursor/rules', 'AGENTS.md'];
 
@@ -66,6 +81,14 @@ export function runInit(cwd: string, opts: { force?: boolean } = {}): InitResult
   ensureGitignored(cwd, ['.relay/CURRENT', '.relay-legacy-tickets.json']);
 
   const detectedRuleFiles = RULE_FILES.filter((f) => existsSync(join(cwd, f)));
+
+  let claudeCodeAdapterInstalled = false;
+  if (detectedRuleFiles.includes('CLAUDE.md')) {
+    const adapter = require('@relay/adapter-claude-code') as ClaudeCodeAdapterModule;
+    adapter.installClaudeCodeAdapter(cwd);
+    claudeCodeAdapterInstalled = true;
+  }
+
   const tier = detectedRuleFiles.length > 0 ? 1 : 0;
 
   let ciWorkflowWritten = false;
@@ -75,5 +98,5 @@ export function runInit(cwd: string, opts: { force?: boolean } = {}): InitResult
     ciWorkflowWritten = true;
   }
 
-  return { tier, detectedRuleFiles, ciWorkflowWritten };
+  return { tier, detectedRuleFiles, ciWorkflowWritten, claudeCodeAdapterInstalled };
 }

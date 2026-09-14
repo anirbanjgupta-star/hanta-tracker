@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { makeScratchRepo, type ScratchRepo } from './helpers.js';
-import { writeArtifact, loadWorkItem, appendApproval, listItemIds } from '../src/relay-dir.js';
+import { writeArtifact, loadWorkItem, appendApproval, listItemIds, appendEvent, itemDir } from '../src/relay-dir.js';
 import { hashContent } from '@relay/core';
 import type { Approval } from '@relay/core';
 
@@ -57,6 +59,21 @@ describe('appendApproval', () => {
 
     const item = loadWorkItem('001-x', 'standard', repo.dir);
     expect(item.approvals).toHaveLength(2);
+  });
+});
+
+describe('appendEvent', () => {
+  it('appends a JSONL record to events.jsonl', () => {
+    repo = makeScratchRepo();
+    writeArtifact('001-x', 'intent', 'i', repo.dir);
+    appendEvent('001-x', { ts: '2026-09-13T10:00:00Z', type: 'gate_requested', gate: 'plan', identity: 'eng@example.com' }, repo.dir);
+    appendEvent('001-x', { ts: '2026-09-13T11:00:00Z', type: 'gate_requested', gate: 'design', identity: 'eng@example.com' }, repo.dir);
+
+    const raw = readFileSync(join(itemDir('001-x', repo.dir), 'events.jsonl'), 'utf8');
+    const lines = raw.trim().split('\n').map((l) => JSON.parse(l));
+    expect(lines).toHaveLength(2);
+    expect(lines[0].gate).toBe('plan');
+    expect(lines[1].gate).toBe('design');
   });
 });
 

@@ -51,6 +51,20 @@ export function appendApproval(id: string, approval: Approval, cwd: string): voi
   appendFileSync(join(dir, 'approvals.jsonl'), serialiseApproval(approval) + '\n');
 }
 
+export interface RelayEvent {
+  ts: string;
+  type: string;
+  gate?: string;
+  identity?: string;
+  [key: string]: unknown;
+}
+
+export function appendEvent(id: string, event: RelayEvent, cwd: string): void {
+  const dir = itemDir(id, cwd);
+  mkdirSync(dir, { recursive: true });
+  appendFileSync(join(dir, 'events.jsonl'), JSON.stringify(event) + '\n');
+}
+
 export function listItemIds(cwd: string): string[] {
   const workDir = join(relayRoot(cwd), 'work');
   if (!existsSync(workDir)) return [];
