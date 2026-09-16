@@ -4,11 +4,13 @@
   "workspaces": ["packages/*", "packages/adapters/*"],
   "scripts": {
     "test": "vitest run",
-    "build": "tsc -b packages/core packages/cli packages/mcp packages/adapters/claude-code packages/daemon"
+    "build": "tsc -b packages/core packages/cli packages/mcp packages/adapters/claude-code packages/daemon",
+    "build:dashboard": "npm run build --workspace=@relay/dashboard"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
     "vitest": "^2.1.0",
-    "@types/node": "^20.16.0"
+    "@types/node": "^20.16.0",
+    "jsdom": "^29.1.1"
   }
 }

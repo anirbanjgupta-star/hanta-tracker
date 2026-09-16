@@ -5,7 +5,7 @@ import { makeScratchRepo, type ScratchRepo } from './helpers.js';
 import { runInit } from '../src/commands/init.js';
 import { runNew } from '../src/commands/new.js';
 import { runGate } from '../src/commands/gate.js';
-import { loadWorkItem } from '../src/relay-dir.js';
+import { loadWorkItem, appendEvent } from '../src/relay-dir.js';
 
 let repo: ScratchRepo;
 afterEach(() => repo?.cleanup());
@@ -72,6 +72,24 @@ describe('runGate', () => {
     runInit(repo.dir);
     await expect(runGate('999-nope', 'design', 'approve', undefined, repo.dir))
       .rejects.toThrow(/spec\.md does not exist/);
+  });
+
+  it('records latencyS when a matching gate_requested event precedes the approval', async () => {
+    repo = makeScratchRepo();
+    const id = await makeItem(repo.dir);
+
+    const soon = new Date(Date.now() - 1000).toISOString();
+    appendEvent(id, { ts: soon, type: 'gate_requested', gate: 'plan', identity: 'eng@example.com' }, repo.dir);
+    const approval = await runGate(id, 'plan', 'approve', undefined, repo.dir);
+    expect(approval.latencyS).toBeGreaterThanOrEqual(1);
+    expect(approval.latencyS).toBeLessThan(5);
+  });
+
+  it('leaves latencyS undefined when no gate_requested event exists for that gate', async () => {
+    repo = makeScratchRepo();
+    const id = await makeItem(repo.dir);
+    const approval = await runGate(id, 'plan', 'approve', undefined, repo.dir);
+    expect(approval.latencyS).toBeUndefined();
   });
 
   it('pushes to the legacy adapter when sourceOfTruth is legacy and the artifact has an externalRef', async () => {

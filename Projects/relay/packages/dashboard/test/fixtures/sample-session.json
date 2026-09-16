@@ -1,0 +1,9 @@
+[
+  { "type": "transition", "id": "001-checkout-fix", "from": "intake", "to": "plan" },
+  { "type": "tool_use", "tool": "Write", "itemId": "001-checkout-fix" },
+  { "type": "transition", "id": "001-checkout-fix", "from": "plan", "to": "design" },
+  { "type": "transition", "id": "002-sso-support", "from": "intake", "to": "plan" },
+  { "type": "tool_use", "tool": "Edit", "itemId": "002-sso-support" },
+  { "type": "transition", "id": "001-checkout-fix", "from": "design", "to": "build" },
+  { "type": "transition", "id": "002-sso-support", "from": "plan", "to": "design" }
+]

@@ -2,21 +2,26 @@
 
 > This is a **handoff file**. A fresh Claude session must be able to resume this project from this file alone — even after a year — as if it were a next-day handoff. If resuming requires rediscovering anything by scanning the codebase, this file has failed. Update it at the end of every session, without being asked.
 
-**Status:** Phases 1-4 complete and verified. `@relay/core` (F1-F4 all closed),
-`@relay/cli` (all ten commands, `SourceOfTruthAdapter` + simulated legacy
-connector), `@relay/mcp` (all five tools reachable over stdio, verified with a
-real MCP client), `@relay/adapters/claude-code` (`PreToolUse`/`SessionStart`
-hooks, three stage-interview skills, `relay init` wiring) and `@relay/daemon`
-(Fastify + `@fastify/websocket` + `chokidar`, holds no authoritative state —
-verified by killing and restarting the real process) built via
-`docs/plans/phase-2-cli.md` through `docs/plans/phase-4-daemon.md`'s TDD plans,
-executed with `subagent-driven-development` and independently re-verified at
-every step. 209/209 tests green (68 core + 98 cli + 9 mcp + 18 adapters + 16
-daemon), `tsc -b` clean across all five packages, all three phases' stated
-acceptance criteria demonstrated live against the built binaries. Phases 5-6
-not started.
+**Status:** Phases 1-5 complete and verified. `@relay/core` (F1-F4 all closed,
+plus `computeMetrics()`), `@relay/cli` (all ten commands, `SourceOfTruthAdapter`
++ simulated legacy connector, `runGate` now stamps `Approval.latencyS`),
+`@relay/mcp` (all five tools reachable over stdio, verified with a real MCP
+client), `@relay/adapters/claude-code` (`PreToolUse`/`SessionStart` hooks,
+three stage-interview skills, `relay init` wiring), `@relay/daemon` (Fastify +
+`@fastify/websocket` + `chokidar`, holds no authoritative state — verified by
+killing and restarting the real process; now also `POST /api/gate` and
+`GET /api/metrics`) and `@relay/dashboard` (React + Vite, all five SPEC §13
+panels + spotlight, functional build verified live in a real browser against
+real daemon + dev-server processes) built via `docs/plans/phase-2-cli.md`
+through `docs/plans/phase-5-dashboard.md`'s TDD plans, executed with
+`subagent-driven-development` and independently re-verified at every step.
+252/252 tests green (75 core + 100 cli + 9 mcp + 18 adapters + 24 daemon + 26
+dashboard), `tsc -b` clean across all five composite packages plus a clean
+`vite build` for the dashboard, every phase's stated acceptance criteria
+demonstrated live against real running processes, not just asserted by the
+test suite. Phase 6 not started.
 **Tier:** client demo
-**Last session:** 2026-09-14
+**Last session:** 2026-09-16
 
 ## What this is
 
@@ -121,7 +126,23 @@ planned — layout in `docs/SPEC.md` §4 and §5.
   authoritative state by construction — every read recomputes from disk;
   the in-memory `lastProjection` is a cache of the last read, never a store.
 - `packages/daemon/test/` — **implemented.** 16 tests across 4 files.
-- `packages/dashboard/` — mission control (planned, Phase 5)
+- `packages/dashboard/src/` — **implemented.** `types.ts` (the dashboard's
+  own local `ItemProjection`/`Stage`/`TransitionEvent`/`FlowMetrics` shapes —
+  this package never `import`s another workspace package, matching its
+  "built by `vite build`, not `tsc -b`" scaffolding decision), `feed.ts`
+  (`feedReducer` — pure WS/fetch state-merge logic, tested without a DOM),
+  `useRelayFeed.ts` (the hook: `GET /api/items` on mount, `WS /stream`
+  subscription; re-fetches items on every transition event to reconcile
+  `blockedBy`, since a transition event alone only carries the new `stage` —
+  see Gotchas), `Spotlight.tsx` (collapse to one item and back),
+  `panels/PipelineLanes.tsx`, `panels/WaitingOnYou.tsx` (approve/send-back,
+  `POST /api/gate`), `panels/LiveSessions.tsx`, `panels/MetricsStrip.tsx`,
+  `panels/IncidentStrip.tsx` (empty-state; Phase 5b binds real data),
+  `App.tsx` (wires all five panels + spotlight), `main.tsx`.
+- `packages/dashboard/test/` — **implemented.** 26 tests across 9 files, plus
+  `setup.ts` (registers `@testing-library/react`'s `cleanup()` — see
+  Gotchas) and `fixtures/sample-session.json` (the SPEC §14 recorded event
+  fixture — test-only, grepped to confirm zero references from `src/`).
 
 ## Features — with verified status
 
@@ -220,8 +241,25 @@ planned — layout in `docs/SPEC.md` §4 and §5.
       doesn't exist yet), a browser-facing approve/reject endpoint (not a
       listed Phase 4 deliverable), persisting `POST /events` to disk (SPEC
       §14: ephemeral by design).
-- [ ] `@relay/dashboard` mission control — not started
-- [ ] Stage 6 trigger slice — not started
+- [x] `@relay/dashboard` mission control — **verified 2026-09-16.** All five
+      SPEC §13 panels (incident strip, pipeline lanes with gate checkpoints,
+      live sessions ticker, waiting-on-you with approve/send-back, flow
+      metrics strip) plus spotlight mode. Two daemon additions this phase
+      needed and added (`POST /api/gate`, `GET /api/metrics`); a
+      `computeMetrics()` in `@relay/core` finally using `Approval.latencyS`
+      — a field declared since Phase 1 but never once set or read before
+      this phase. Verified live in a real browser (Browser pane tools)
+      against real `relay-daemon` and dashboard dev-server processes, not
+      screenshotted from imagination: hero beat 1 (unblock) — approved a
+      gate through the real `POST /api/gate`, watched the item move lanes
+      and its blocked status update live, with no page reload; hero beat 2
+      (parallel) — two concurrently in-flight items both rendering
+      correctly at once. Hero beat 3 (an item appearing from the Stage 6
+      trigger) is honestly out of this phase's reach — no detector exists
+      yet; that is Phase 5b. 26/26 tests, 9 files, plus a clean production
+      `vite build`. **Build is done and verified — ready to focus on
+      design** (CLAUDE.md principle 12) — no design pass has been taken.
+- [ ] Stage 6 trigger slice (Phase 5b) — not started
 - [ ] Design pass — gated behind all of the above per the functional-first rule
 
 ## Gotchas
@@ -340,30 +378,81 @@ planned — layout in `docs/SPEC.md` §4 and §5.
   code — resolve the path against the hook's `cwd` first
   (`path.relative(cwd, path.resolve(cwd, filePath))`) before comparing the
   leading segment.
+- **`POST /api/gate` approves as whoever's git identity the daemon's own
+  host is running as — not the browser viewer.** This daemon has no
+  signed-in-viewer concept; every approval made through the dashboard's
+  "Waiting on you" buttons is attributed the same way the CLI always has
+  been, via `gitIdentity(cwd)`. Fine for this project's single-user local
+  daemon; not a multi-user auth system. Don't wire a "who's clicking"
+  identity into the browser without also building real auth — a fake one
+  would be worse than none, since it would look like an audit trail that
+  isn't.
+- **The dashboard's recorded event fixture
+  (`packages/dashboard/test/fixtures/sample-session.json`) is a test
+  dependency only, per SPEC §14 — same rule as "demos run live" above,
+  applied to this package specifically.** It exists so `feedReducer` can
+  be proven against a realistic, non-synthetic event sequence without a
+  live daemon in the test run. Nothing under `packages/dashboard/src/`
+  may ever import it — confirmed by grep before Task 13 was committed,
+  and worth re-confirming the same way if this file is ever touched
+  again: `grep -rn "sample-session" packages/dashboard/src/` must return
+  nothing.
+- **A WS transition event carries only the new `stage`, never
+  `blockedBy`.** `feedReducer`'s own transition handling
+  (`packages/dashboard/src/feed.ts`) patches `stage` immediately for a
+  responsive UI, but can't know whether the item is newly unblocked,
+  blocked on something new, or clear — found live during Phase 5's own
+  acceptance run, as a real bug: the "Waiting on you" panel kept showing
+  an item as blocked with stale, pre-transition reasons after it had
+  already moved to its next pipeline lane. Fixed in
+  `useRelayFeed.ts`: every transition event triggers a fresh
+  `GET /api/items` to reconcile the full item shape from the one
+  authoritative source. That refetch is itself guarded by a monotonic
+  request counter — two transitions firing close together can produce
+  two in-flight requests that resolve out of order, and only the
+  response from the most-recently-sent request is ever applied. Neither
+  half of this fix has a dedicated unit test (the hook is intentionally
+  proven live only, per Task 5's own reasoning — WS/fetch wiring, not
+  logic) — if this file is touched again, re-verify by hand the same way
+  this fix was found: open the dashboard against a real daemon, approve
+  a gate through the real API without reloading the page, and confirm
+  both the pipeline lane AND the "Waiting on you" membership update
+  correctly together.
 
 ## Next steps
 
-Phases 1-4 are done and verified. `docs/plans/phase-2-cli.md` (26 tasks),
-`docs/plans/phase-3-mcp.md` (14 tasks), and `docs/plans/phase-4-daemon.md`
-(9 tasks) are all fully executed, reviewed, and committed — see the
-Changelog below for the real bugs code review (and, for Phase 4, live manual
-verification) caught along the way (several worth knowing about before
-touching this code again; also captured as Gotchas above).
+Phases 1-5 are done and verified. `docs/plans/phase-2-cli.md` (26 tasks),
+`docs/plans/phase-3-mcp.md` (14 tasks), `docs/plans/phase-4-daemon.md`
+(9 tasks), and `docs/plans/phase-5-dashboard.md` (14 tasks) are all fully
+executed, reviewed, and committed — see the Changelog below for the real
+bugs code review (and, for Phases 4-5, live manual verification) caught
+along the way (several worth knowing about before touching this code again;
+also captured as Gotchas above).
 
-1. **`@relay/dashboard` next** (Phase 5) — depends on the daemon, which is
-   now done and verified. Use the recorded event fixture (SPEC §14) to
-   iterate on the UI; it is a test dependency only, never reachable from a
-   demo path. Register in `apps.js` when it first boots on port 5182 —
-   the daemon already owns that port and has been running against it in
-   every verification run this phase, so the dashboard shares the same
-   origin rather than needing a new port assignment.
-2. Then the Stage 6 trigger slice (Phase 5b — only needs the daemon, not the
-   dashboard, so it could in principle land before or alongside Phase 5).
-   Cursor and Codex adapters can wait until the MCP surface has been
+1. **The Stage 6 trigger slice next** (Phase 5b) — the third hero beat.
+   Three pieces per `IMPLEMENTATION_PLAN.md`: a deterministic detector (no
+   model involved — Western Electric rules against version-controlled
+   control bands), an intent writer (Anthropic SDK, `claude-opus-5`, key
+   from the environment), and binding the dashboard's already-built (but
+   currently empty) incident strip panel to real data. Only needs the
+   daemon, not further dashboard work, beyond that one binding.
+2. Register `@relay/dashboard`/`@relay/daemon` in `apps.js` — port 5182,
+   already assigned and exercised live in every Phase 4-5 verification run.
+   Not yet registered because there's no `start.sh`/`stop.sh` wiring both
+   processes together yet (the daemon and dashboard dev server were always
+   started as two separate manual processes for verification) — that's
+   worth building before registering, not a blocker for registering per se,
+   but do both together rather than registering a launcher entry for
+   something that still needs two manual commands to actually run.
+3. A design pass on the dashboard, once explicitly asked for — the
+   functional build is verified and announced done (see Features above);
+   CLAUDE.md principle 12 gates the design pass behind that announcement,
+   not behind this phase's own completion alone.
+4. Cursor and Codex adapters can wait until the MCP surface has been
    dogfooded against real use through Claude Code first.
-3. Phase 6 is the acceptance test, against a **copy** of outfit-advisor at
+5. Phase 6 is the acceptance test, against a **copy** of outfit-advisor at
    `Projects/relay-pilot/` — never the real project, never on port 8080.
-4. Still genuinely open, not deferred by choice: a live, human-observed
+6. Still genuinely open, not deferred by choice: a live, human-observed
    Claude Code session actually getting an edit refused and then succeeding
    under the real hook — Phase 3's acceptance demo drove the same hook
    command exactly as Claude Code's documented dispatch mechanism does, but
@@ -372,6 +461,91 @@ touching this code again; also captured as Gotchas above).
    the adapter production-ready.
 
 ## Changelog — append-only, newest first
+
+- 2026-09-16 (Phase 5 — `@relay/dashboard`): Executed
+  `docs/plans/phase-5-dashboard.md`'s 14 tasks via
+  `superpowers:subagent-driven-development` — same discipline as Phases 2-4.
+  Final state: `npm run build` (five composite packages) and
+  `npm run build:dashboard` (a real `vite build`, not just the dev server)
+  both clean, `npx vitest run` — 252/252 tests (75 core + 100 cli + 9 mcp +
+  18 adapters + 24 daemon + 26 dashboard), zero `.only`/`.skip`. Verified
+  live in a real browser against real `relay-daemon` and dashboard
+  dev-server processes: hero beat 1 (unblock) — approved a gate through the
+  real `POST /api/gate`, watched the item's pipeline lane and blocked status
+  update with no page reload; hero beat 2 (parallel) — two concurrently
+  in-flight items both rendering correctly at once. Hero beat 3 stated
+  honestly as out of this phase's reach (Phase 5b's Stage 6 detector doesn't
+  exist yet).
+
+  Real bugs found and fixed along the way, beyond the plan's own draft code:
+  - **The plan's own draft dev-server verification command was wrong.**
+    `npx vite --config ... --root packages/dashboard` fails outright — Vite's
+    CLI has no `--root` flag — and separately, running `npx vite` from the
+    monorepo root resolves a stale `vite@5.4.21` (vitest's own internal
+    dependency, hoisted to the workspace root), not this package's own
+    pinned `vite@6.4.3` (nested under `packages/dashboard/node_modules`
+    since the versions conflict). Used `npm run dev --workspace=@relay/dashboard`
+    instead throughout — confirmed via the dev server's own startup banner
+    and a `curl` against the real served page.
+  - **`jsdom@^30.0.1`, as the plan first specified, requires Node
+    `^22.22.2` — this machine runs `22.18.0`, below that floor** (caught by
+    npm's own `EBADENGINE` warning, not silently ignored). Downgraded to
+    `jsdom@^29.1.1` (supports `^22.13.0`), confirmed with a throwaway smoke
+    test before building any real dashboard test on top of it.
+  - **Nothing in this project's vitest setup called `@testing-library/react`'s
+    `cleanup()` between tests** — every dashboard component test's `render()`
+    left its DOM tree in place for the next test in the same file, so by the
+    second test `getByTestId` started throwing "multiple elements found" for
+    testids that were genuinely unique within any single render. Added
+    `packages/dashboard/test/setup.ts` (`afterEach(() => cleanup())`),
+    wired into `vitest.config.ts`'s `setupFiles`; verified safe to apply
+    globally (not just to dashboard tests) by reading `@testing-library/dom`'s
+    own source for a `document`-existence guard, and by running the full
+    suite twice in a row to rule out order-dependent flake.
+  - **A WS transition event carries only the new `stage`, never
+    `blockedBy`** — found live, not by any unit test: after a real gate
+    approval, an item correctly moved to its next pipeline lane but the
+    "Waiting on you" panel kept showing it blocked with stale,
+    pre-transition reasons. Fixed by having `useRelayFeed` re-fetch
+    `GET /api/items` on every transition event to reconcile full state from
+    the one authoritative source — then, per its own code review, hardened
+    with a monotonic request counter after a second look found the refetch
+    itself could race (two transitions firing close together could let an
+    older, slower response overwrite a newer one). Re-verified live,
+    end-to-end, after each fix.
+  - **`GET /api/metrics`'s first implementation was needlessly wasteful** —
+    it called `buildProjection(cwd)` (which itself computes and discards a
+    full `runStatus()` per item — gate evaluation, approval context — just
+    to get a list of ids) before reloading every item's full `WorkItem`
+    separately. Simplified to `listItemIds(cwd).map(loadWorkItem)`.
+  - **`POST /api/gate`'s `id` arrived from an untrusted HTTP body with no
+    shape validation** — the first daemon endpoint (Phase 3's MCP tools and
+    Phase 4's other routes never took a client-supplied `id` at all).
+    `itemDir()`/`loadWorkItem()` do no path sanitization of their own.
+    Mutation-tested directly: sent `id: '../../../../tmp/relay-traversal-poc'`
+    against a real built daemon with validation removed — it did not
+    actually succeed in writing a file (`runGate`'s own "artifact must
+    already exist" check caught it first, for an unrelated reason), so the
+    practical blast radius was smaller than it first looked, but the
+    explicit validation added afterward (a regex matching the real id
+    shape) is still correct defense-in-depth, and also closed a second,
+    separate gap: a missing/malformed request body could previously throw
+    an uncaught 500 instead of a clean 400.
+  - Two design decisions the plan flagged as uncertain up front and asked
+    to verify rather than assume, both confirmed correct as first drafted:
+    this machine's default git branch is `main` (checked before writing a
+    test that assumed it), and `@vitejs/plugin-react`'s installed API
+    matched the plan's own draft sketch exactly (checked against the real
+    installed package's README before writing any WS route code, back in
+    Phase 4 — the same discipline carried into this phase's own version
+    research).
+
+  One thing worth its own line: `Approval.latencyS` had been declared in
+  `packages/core/src/types.ts` since Phase 1 and never once set or read
+  anywhere in the codebase before this phase (confirmed by a repo-wide grep
+  before writing the plan) — Task 1 finally populates it, and Task 2's
+  `computeMetrics()` finally reads it, closing a gap that had sat dormant
+  for four phases.
 
 - 2026-09-14 (Phase 4 — `@relay/daemon`): Executed `docs/plans/phase-4-daemon.md`'s
   9 tasks via `superpowers:subagent-driven-development` — same discipline as

@@ -12,3 +12,4 @@ export { deriveStage, GATE_FOR_KIND } from './state.js';
 export { declaredFiles, checkDrift } from './drift.js';
 export { evaluateGate, KIND_FOR_GATE, type GateChecks } from './gate.js';
 export { parseConfig, parseRoles, DEFAULT_LANES, DEFAULT_CONFIG } from './config.js';
+export { computeMetrics, type FlowMetrics } from './metrics.js';

@@ -65,6 +65,12 @@ export function appendEvent(id: string, event: RelayEvent, cwd: string): void {
   appendFileSync(join(dir, 'events.jsonl'), JSON.stringify(event) + '\n');
 }
 
+export function loadEvents(id: string, cwd: string): RelayEvent[] {
+  const path = join(itemDir(id, cwd), 'events.jsonl');
+  if (!existsSync(path)) return [];
+  return readFileSync(path, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line));
+}
+
 export function listItemIds(cwd: string): string[] {
   const workDir = join(relayRoot(cwd), 'work');
   if (!existsSync(workDir)) return [];

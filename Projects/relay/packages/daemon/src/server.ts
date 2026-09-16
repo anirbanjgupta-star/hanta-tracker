@@ -2,6 +2,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import { watch } from 'chokidar';
 import { join } from 'node:path';
+import { runGate, loadWorkItem, loadRelayConfig, listItemIds } from '@relay/cli/lib';
+import { computeMetrics } from '@relay/core';
 import { buildProjection } from './projection.js';
 import { diffProjections } from './diff.js';
 import { ClientRegistry } from './broadcast.js';
@@ -42,6 +44,49 @@ export async function buildServer(cwd: string): Promise<FastifyInstance> {
     registry.broadcast(request.body);
     reply.code(202);
     return { received: true };
+  });
+
+  app.post('/api/gate', async (request, reply) => {
+    const body = request.body as { id?: unknown; gate?: unknown; action?: unknown; reason?: unknown } | null;
+    // id arrives from an untrusted HTTP body here, unlike every other caller
+    // of runGate/itemDir so far, which has always been a value the person
+    // running the CLI typed themselves — itemDir() does no path sanitization
+    // of its own (join(relayRoot(cwd), 'work', id)), so an id like
+    // '../../../../tmp/pwned' would otherwise create directories and write
+    // approvals.jsonl outside .relay/work entirely. Reject anything that
+    // doesn't match the real id shape (allocateItemId in item-id.ts:
+    // <3+ digit counter>-<lowercase alnum/hyphen slug, possibly empty>)
+    // before it ever reaches runGate.
+    const idPattern = /^\d{3,}-[a-z0-9-]*$/;
+    const gates = ['plan', 'design', 'build'];
+    const actions = ['approve', 'reject', 'override'];
+    if (
+      typeof body?.id !== 'string' || !idPattern.test(body.id) ||
+      typeof body?.gate !== 'string' || !gates.includes(body.gate) ||
+      typeof body?.action !== 'string' || !actions.includes(body.action) ||
+      (body.reason !== undefined && typeof body.reason !== 'string')
+    ) {
+      reply.code(400);
+      return { error: 'invalid request body — id, gate, and action are required and must have valid shapes' };
+    }
+    const { id, gate, action, reason } = body as { id: string; gate: 'plan' | 'design' | 'build'; action: 'approve' | 'reject' | 'override'; reason?: string };
+    if ((action === 'reject' || action === 'override') && !reason) {
+      reply.code(400);
+      return { error: `--reason is required for --${action}` };
+    }
+    try {
+      const approval = await runGate(id, gate, action, reason, cwd);
+      return approval;
+    } catch (err) {
+      reply.code(400);
+      return { error: (err as Error).message };
+    }
+  });
+
+  app.get('/api/metrics', async () => {
+    const config = loadRelayConfig(cwd);
+    const items = listItemIds(cwd).map((id) => loadWorkItem(id, config.defaultLane, cwd));
+    return computeMetrics(items);
   });
 
   app.get('/stream', { websocket: true }, (socket) => {

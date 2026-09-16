@@ -1,5 +1,5 @@
 import { hashContent, KIND_FOR_GATE, type Approval, type Stage } from '@relay/core';
-import { loadWorkItem, appendApproval } from '../relay-dir.js';
+import { loadWorkItem, appendApproval, loadEvents } from '../relay-dir.js';
 import { loadRelayConfig, buildApprovalContext } from '../context.js';
 import { LegacyJsonAdapter } from '../adapters/legacy-json.js';
 
@@ -49,6 +49,14 @@ export async function runGate(
     verdict: VERDICT_FOR_ACTION[action],
     ...(reason ? { reason } : {}),
   };
+
+  const requestEvents = loadEvents(id, cwd)
+    .filter((e) => e.type === 'gate_requested' && e.gate === gate)
+    .sort((a, b) => Date.parse(String(a.ts)) - Date.parse(String(b.ts)));
+  const lastRequest = requestEvents.at(-1);
+  if (lastRequest) {
+    approval.latencyS = (Date.parse(approval.ts) - Date.parse(String(lastRequest.ts))) / 1000;
+  }
 
   appendApproval(id, approval, cwd);
 
