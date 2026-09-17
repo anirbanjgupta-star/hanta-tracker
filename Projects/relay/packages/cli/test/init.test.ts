@@ -23,6 +23,14 @@ describe('runInit', () => {
     expect(result.tier).toBe(0);
   });
 
+  it('grants the roles to the identity of whoever ran init, not a placeholder', () => {
+    repo = makeScratchRepo();
+    runInit(repo.dir);
+    const roles = readFileSync(join(repo.dir, '.relay/roles.yml'), 'utf8');
+    expect(roles).toContain('eng@example.com');
+    expect(roles).not.toContain('you@example.com');
+  });
+
   it('seeds two example tickets in the simulated legacy connector', () => {
     repo = makeScratchRepo();
     runInit(repo.dir);
@@ -105,5 +113,20 @@ describe('runInit', () => {
     const gitignore = readFileSync(join(repo.dir, '.gitignore'), 'utf8');
     const exactLines = gitignore.split('\n').filter((l) => l.trim() === '.relay/CURRENT');
     expect(exactLines).toHaveLength(1);
+  });
+
+  it('scaffolds a default Stage 6 control-bands config', () => {
+    repo = makeScratchRepo();
+    runInit(repo.dir);
+    const bands = readFileSync(join(repo.dir, '.relay/policies/stage6-bands.yml'), 'utf8');
+    expect(bands).toMatch(/gateLatencyS/);
+    expect(bands).toMatch(/plan/);
+  });
+
+  it('adds detector-state.json to .gitignore', () => {
+    repo = makeScratchRepo();
+    runInit(repo.dir);
+    const gitignore = readFileSync(join(repo.dir, '.gitignore'), 'utf8');
+    expect(gitignore).toMatch(/\.relay\/detector-state\.json/);
   });
 });

@@ -11,6 +11,7 @@ import { runHandover, type HandoverTarget } from './commands/handover.js';
 import { runResume } from './commands/resume.js';
 import { runVerify } from './commands/verify.js';
 import { runAdopt } from './commands/adopt.js';
+import { runStage6Detect } from './commands/detect.js';
 import { resolveCurrentItemId } from './current-item.js';
 
 function guarded<T extends unknown[]>(fn: (...args: T) => void | Promise<void>) {
@@ -27,8 +28,8 @@ function guarded<T extends unknown[]>(fn: (...args: T) => void | Promise<void>) 
 const program = new Command();
 program.name('relay').description('Relay — the AI-native SDLC runtime');
 
-program.command('init').action(guarded(() => {
-  const result = runInit(process.cwd());
+program.command('init').option('--force').action(guarded((opts: { force?: boolean }) => {
+  const result = runInit(process.cwd(), { force: opts.force });
   const detected = result.detectedRuleFiles.length > 0 ? ` Detected: ${result.detectedRuleFiles.join(', ')}.` : '';
   console.log(`Tier ${result.tier} reached.${detected}`);
   console.log(result.ciWorkflowWritten ? 'CI workflow written.' : 'No GitHub remote — CI workflow skipped.');
@@ -142,6 +143,17 @@ program.command('adopt')
   .action(guarded(async (opts: { base: string }) => {
     const result = await runAdopt(process.cwd(), { base: opts.base });
     console.log(`Adopted as ${result.id} (origin: adopted). Review and \`relay lint\` before approving any gate.`);
+  }));
+
+program.command('detect')
+  .action(guarded(async () => {
+    const result = await runStage6Detect(process.cwd());
+    if (result.acted.length > 0) console.log(`Filed: ${result.acted.join(', ')}`);
+    if (result.diagnosed.length > 0) console.log(`Diagnosed (2-sigma, read-only): ${result.diagnosed.length}`);
+    if (result.logged.length > 0) console.log(`Logged (1-sigma): ${result.logged.length}`);
+    if (result.acted.length === 0 && result.diagnosed.length === 0 && result.logged.length === 0) {
+      console.log('No breaches.');
+    }
   }));
 
 program.parseAsync(process.argv);

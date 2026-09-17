@@ -38,9 +38,9 @@ describe('defaultConfigYaml / defaultRolesYaml', () => {
     expect(config).toEqual(DEFAULT_CONFIG);
   });
 
-  it('produces YAML that parseRoles accepts', () => {
-    expect(parseRoles(defaultRolesYaml())).toEqual({
-      'you@example.com': ['product-owner', 'tech-lead', 'engineer'],
+  it('produces YAML that parseRoles accepts, granting the passed-in identity', () => {
+    expect(parseRoles(defaultRolesYaml('eng@example.com'))).toEqual({
+      'eng@example.com': ['product-owner', 'tech-lead', 'engineer'],
     });
   });
 });

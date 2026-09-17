@@ -8,6 +8,7 @@ export interface StatusResult {
   lane: string;
   stage: Stage;
   blockedBy: string[];
+  origin: 'authored' | 'adopted' | 'stage6-detector';
 }
 
 export function runStatus(cwd: string, idOverride?: string): StatusResult {
@@ -34,6 +35,7 @@ export function runStatus(cwd: string, idOverride?: string): StatusResult {
   const stage = deriveStage(item, ctx);
   const kind = KIND_FOR_GATE[stage];
   const blockedBy = kind && item.artifacts[kind] ? evaluateGate(item, stage, ctx).reasons : [];
+  const origin = item.artifacts.intent?.origin ?? 'authored';
 
-  return { id, lane: item.lane, stage, blockedBy };
+  return { id, lane: item.lane, stage, blockedBy, origin };
 }

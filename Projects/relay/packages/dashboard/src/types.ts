@@ -5,6 +5,7 @@ export interface ItemProjection {
   lane: string;
   stage: Stage;
   blockedBy: string[];
+  origin: 'authored' | 'adopted' | 'stage6-detector';
 }
 
 export interface TransitionEvent {

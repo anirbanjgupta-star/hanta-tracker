@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import {
   intentTemplate, specTemplate, planTemplate,
-  defaultConfigYaml, defaultRolesYaml, ciWorkflowYaml,
+  defaultConfigYaml, defaultRolesYaml, ciWorkflowYaml, defaultStage6BandsYaml,
 } from '../templates.js';
-import { remoteIsGitHub } from '../git.js';
+import { remoteIsGitHub, gitIdentity } from '../git.js';
 
 export interface InitResult {
   tier: 0 | 1;
@@ -55,12 +55,13 @@ export function runInit(cwd: string, opts: { force?: boolean } = {}): InitResult
     throw new Error('.relay/ already initialized — pass --force to re-scaffold');
   }
 
-  for (const dir of ['schemas', 'templates', 'work']) {
+  for (const dir of ['schemas', 'templates', 'work', 'policies']) {
     mkdirSync(join(relayDir, dir), { recursive: true });
   }
 
   writeFileSync(join(relayDir, 'config.yml'), defaultConfigYaml());
-  writeFileSync(join(relayDir, 'roles.yml'), defaultRolesYaml());
+  writeFileSync(join(relayDir, 'roles.yml'), defaultRolesYaml(gitIdentity(cwd)));
+  writeFileSync(join(relayDir, 'policies/stage6-bands.yml'), defaultStage6BandsYaml());
 
   writeFileSync(join(relayDir, 'templates/intent.md'), intentTemplate('<id>', 'standard'));
   writeFileSync(join(relayDir, 'templates/spec.md'), specTemplate('<id>', 'standard', '<upstream-hash>'));
@@ -78,7 +79,7 @@ export function runInit(cwd: string, opts: { force?: boolean } = {}): InitResult
     { ref: 'JIRA-1002', title: 'Fix typo on the checkout button', body: 'Button reads "Chekout".' },
   ], null, 2));
 
-  ensureGitignored(cwd, ['.relay/CURRENT', '.relay-legacy-tickets.json']);
+  ensureGitignored(cwd, ['.relay/CURRENT', '.relay-legacy-tickets.json', '.relay/detector-state.json']);
 
   const detectedRuleFiles = RULE_FILES.filter((f) => existsSync(join(cwd, f)));
 

@@ -23,7 +23,7 @@ export default function App() {
 
   return (
     <div>
-      <IncidentStrip />
+      <IncidentStrip items={feed.items} />
       <Spotlight items={feed.items}>{(shown) => <PipelineLanes items={shown} />}</Spotlight>
       <LiveSessions activity={feed.activity} />
       <WaitingOnYou items={feed.items} />

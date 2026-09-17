@@ -3,7 +3,7 @@ import { feedReducer, initialFeedState } from '../src/feed.js';
 import type { ItemProjection } from '../src/types.js';
 
 function item(id: string, stage: ItemProjection['stage']): ItemProjection {
-  return { id, lane: 'standard', stage, blockedBy: [] };
+  return { id, lane: 'standard', stage, blockedBy: [], origin: 'authored' };
 }
 
 describe('feedReducer', () => {
@@ -43,7 +43,7 @@ describe('feedReducer', () => {
       type: 'ws-message',
       raw: JSON.stringify({ type: 'transition', id: '003-z', from: 'intake', to: 'plan' }),
     });
-    expect(state.items).toEqual([{ id: '003-z', lane: 'standard', stage: 'plan', blockedBy: [] }]);
+    expect(state.items).toEqual([{ id: '003-z', lane: 'standard', stage: 'plan', blockedBy: [], origin: 'authored' }]);
   });
 
   it('appends a non-transition WS message to the activity log, capped at 50 entries, without touching items', () => {

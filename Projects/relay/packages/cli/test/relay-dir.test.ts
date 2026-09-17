@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { makeScratchRepo, type ScratchRepo } from './helpers.js';
-import { writeArtifact, loadWorkItem, appendApproval, listItemIds, appendEvent, itemDir } from '../src/relay-dir.js';
+import { writeArtifact, loadWorkItem, appendApproval, listItemIds, appendEvent, itemDir, loadDetectorState, saveDetectorState } from '../src/relay-dir.js';
 import { hashContent } from '@relay/core';
 import type { Approval } from '@relay/core';
 
@@ -88,5 +88,18 @@ describe('listItemIds', () => {
     writeArtifact('001-a', 'intent', 'a', repo.dir);
     writeArtifact('002-b', 'intent', 'b', repo.dir);
     expect(listItemIds(repo.dir).sort()).toEqual(['001-a', '002-b']);
+  });
+});
+
+describe('detector state', () => {
+  it('returns an empty cursor before any detector run has happened', () => {
+    repo = makeScratchRepo();
+    expect(loadDetectorState(repo.dir)).toEqual({ lastCheckedTs: {} });
+  });
+
+  it('round-trips a saved cursor', () => {
+    repo = makeScratchRepo();
+    saveDetectorState({ lastCheckedTs: { plan: '2026-09-17T10:00:00Z' } }, repo.dir);
+    expect(loadDetectorState(repo.dir)).toEqual({ lastCheckedTs: { plan: '2026-09-17T10:00:00Z' } });
   });
 });

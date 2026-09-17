@@ -20,11 +20,16 @@ describe('runGate', () => {
   it('appends an approved record with the current hash and git identity', async () => {
     repo = makeScratchRepo();
     const id = await makeItem(repo.dir);
+    // runInit grants the identity that ran it every role by default (the
+    // whole point of the fix that made this so — see init.test.ts's "grants
+    // the roles to the identity of whoever ran init" test), so overwrite
+    // roles.yml with an empty mapping to exercise the genuinely-unlisted path.
+    writeFileSync(join(repo.dir, '.relay/roles.yml'), '{}\n');
     const approval = await runGate(id, 'plan', 'approve', undefined, repo.dir);
 
     expect(approval.verdict).toBe('approved');
     expect(approval.identity).toBe('eng@example.com');
-    expect(approval.role).toBe('unspecified'); // eng@example.com isn't in the default roles.yml
+    expect(approval.role).toBe('unspecified'); // eng@example.com isn't in roles.yml
     const item = loadWorkItem(id, 'standard', repo.dir);
     expect(item.approvals).toHaveLength(1);
   });

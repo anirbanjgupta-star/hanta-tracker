@@ -10,3 +10,4 @@ export { runVerify, type VerifyOptions, type VerifyReport } from './commands/ver
 export { resolveCurrentItemId } from './current-item.js';
 export { loadRelayConfig, buildApprovalContext } from './context.js';
 export { loadWorkItem, appendEvent, itemDir, listItemIds } from './relay-dir.js';
+export { findBreaches, runStage6Detect, type Finding } from './commands/detect.js';

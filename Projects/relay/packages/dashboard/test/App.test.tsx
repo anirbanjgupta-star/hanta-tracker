@@ -26,7 +26,7 @@ describe('App', () => {
     vi.stubGlobal('fetch', vi.fn((url: string) => {
       if (url === '/api/items') {
         return Promise.resolve(new Response(JSON.stringify([
-          { id: '001-x', lane: 'standard', stage: 'plan', blockedBy: ['No approval recorded'] },
+          { id: '001-x', lane: 'standard', stage: 'plan', blockedBy: ['No approval recorded'], origin: 'authored' },
         ]), { status: 200 }));
       }
       if (url === '/api/metrics') {

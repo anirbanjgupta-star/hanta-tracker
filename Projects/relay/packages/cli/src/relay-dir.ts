@@ -88,3 +88,17 @@ export function loadRolesText(cwd: string): string | null {
   const path = join(relayRoot(cwd), 'roles.yml');
   return existsSync(path) ? readFileSync(path, 'utf8') : null;
 }
+
+export interface DetectorState {
+  lastCheckedTs: Partial<Record<string, string>>;
+}
+
+export function loadDetectorState(cwd: string): DetectorState {
+  const path = join(relayRoot(cwd), 'detector-state.json');
+  return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : { lastCheckedTs: {} };
+}
+
+export function saveDetectorState(state: DetectorState, cwd: string): void {
+  mkdirSync(relayRoot(cwd), { recursive: true });
+  writeFileSync(join(relayRoot(cwd), 'detector-state.json'), JSON.stringify(state, null, 2) + '\n');
+}

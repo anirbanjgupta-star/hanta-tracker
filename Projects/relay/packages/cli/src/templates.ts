@@ -55,8 +55,18 @@ export function defaultConfigYaml(): string {
   return stringify(DEFAULT_CONFIG);
 }
 
-export function defaultRolesYaml(): string {
-  return stringify({ 'you@example.com': ['product-owner', 'tech-lead', 'engineer'] });
+export function defaultRolesYaml(identity: string): string {
+  return stringify({ [identity]: ['product-owner', 'tech-lead', 'engineer'] });
+}
+
+export function defaultStage6BandsYaml(): string {
+  return stringify({
+    gateLatencyS: {
+      plan: { centerline: 3600, sigma: 1800 },
+      design: { centerline: 7200, sigma: 3600 },
+      build: { centerline: 14400, sigma: 7200 },
+    },
+  });
 }
 
 export function ciWorkflowYaml(): string {

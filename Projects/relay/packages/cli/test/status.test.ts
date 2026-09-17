@@ -82,4 +82,11 @@ describe('runStatus', () => {
     expect(status.stage).toBe('plan');
     expect(status.blockedBy.join(' ')).toMatch(/changed since approval/i);
   });
+
+  it('exposes origin from the intent artifact, defaulting to authored', async () => {
+    repo = makeScratchRepo();
+    runInit(repo.dir);
+    const { id } = await runNew('x', {}, repo.dir);
+    expect(runStatus(repo.dir, id).origin).toBe('authored');
+  });
 });

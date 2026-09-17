@@ -22,7 +22,8 @@ export function parseArtifact(raw: string, kind: ArtifactKind): Artifact {
     policies: Array.isArray(fm.policies) ? (fm.policies as string[]) : [],
     externalRef:
       typeof fm.external_ref === 'string' ? fm.external_ref : null,
-    origin: fm.origin === 'adopted' ? 'adopted' : 'authored',
+    origin:
+      fm.origin === 'adopted' || fm.origin === 'stage6-detector' ? fm.origin : 'authored',
     body,
     raw,
   };

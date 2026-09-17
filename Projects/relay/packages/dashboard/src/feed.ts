@@ -37,9 +37,13 @@ export function feedReducer(state: FeedState, action: FeedAction): FeedState {
       }
       if (isTransitionEvent(parsed)) {
         const known = state.items.some((i) => i.id === parsed.id);
+        // lane/blockedBy/origin are placeholders for a brand-new item — a
+        // transition event carries none of them — corrected moments later
+        // by useRelayFeed's own refetch-on-transition (same reasoning as
+        // the stale-blockedBy fix from Phase 5's own acceptance run).
         const items = known
           ? state.items.map((i) => (i.id === parsed.id ? { ...i, stage: parsed.to as ItemProjection['stage'] } : i))
-          : [...state.items, { id: parsed.id, lane: 'standard', stage: parsed.to as ItemProjection['stage'], blockedBy: [] }];
+          : [...state.items, { id: parsed.id, lane: 'standard', stage: parsed.to as ItemProjection['stage'], blockedBy: [], origin: 'authored' as const }];
         return { ...state, items };
       }
       return { ...state, activity: [parsed, ...state.activity].slice(0, MAX_ACTIVITY) };

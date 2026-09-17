@@ -1,11 +1,21 @@
-// Real panel, no real data source yet — the Stage 6 detector that would
-// populate this (a band breach writing an intent.md with no human in the
-// path) is Phase 5b, not this phase. See docs/plans/phase-5-dashboard.md's
-// own header for why this is a stated scope boundary, not an oversight.
-export function IncidentStrip() {
+import type { ItemProjection } from '../types.js';
+
+export function IncidentStrip({ items }: { items: ItemProjection[] }) {
+  const incidents = items.filter((item) => item.origin === 'stage6-detector');
+
+  if (incidents.length === 0) {
+    return (
+      <section aria-label="Incident strip">
+        <p>No incidents.</p>
+      </section>
+    );
+  }
+
   return (
     <section aria-label="Incident strip">
-      <p>No incidents.</p>
+      {incidents.map((item) => (
+        <div key={item.id}>{item.id}</div>
+      ))}
     </section>
   );
 }

@@ -10,7 +10,7 @@ export interface Artifact {
   upstream: string | null;
   policies: string[];
   externalRef: string | null;
-  origin: 'authored' | 'adopted';
+  origin: 'authored' | 'adopted' | 'stage6-detector';
   body: string;
   raw: string;
 }

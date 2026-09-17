@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import { watch } from 'chokidar';
 import { join } from 'node:path';
-import { runGate, loadWorkItem, loadRelayConfig, listItemIds } from '@relay/cli/lib';
+import { runGate, loadWorkItem, loadRelayConfig, listItemIds, findBreaches, runStage6Detect } from '@relay/cli/lib';
 import { computeMetrics } from '@relay/core';
 import { buildProjection } from './projection.js';
 import { diffProjections } from './diff.js';
@@ -21,6 +21,34 @@ export async function buildServer(cwd: string): Promise<FastifyInstance> {
       registry.broadcast(event);
     }
     lastProjection = next;
+
+    // Fire-and-forget: a breach here is genuinely a side effect (it may
+    // write a new item to disk, which is itself a filesystem change this
+    // same watcher will pick up on its own next tick and broadcast like
+    // any other new item — no separate wiring needed for the incident to
+    // reach the dashboard once it exists). Never let a Stage 6 failure
+    // (e.g. no ANTHROPIC_API_KEY configured, or a malformed
+    // stage6-bands.yml — findBreaches() itself can throw synchronously,
+    // e.g. a zod validation error, not just runStage6Detect's own async
+    // failures) crash the daemon's own watch loop — this feature is
+    // opt-in (no .relay/policies/stage6-bands.yml means findBreaches()
+    // returns [] immediately, no-op) and its own errors must degrade the
+    // same way a missing .relay/config.yml does everywhere else in this
+    // codebase: fail silently, never take down ergonomics that have
+    // nothing to do with this feature. The guard call below is
+    // synchronous and chokidar's 'all' listener has no surrounding
+    // try/catch of its own, so an uncaught throw here would crash the
+    // whole process, not just this one feature — confirmed by reproducing
+    // it with sigma: 0 in stage6-bands.yml before adding this try/catch.
+    try {
+      if (findBreaches(cwd).length > 0) {
+        runStage6Detect(cwd).catch((err) => {
+          console.error('[stage6] detection failed:', (err as Error).message);
+        });
+      }
+    } catch (err) {
+      console.error('[stage6] detection failed:', (err as Error).message);
+    }
   }
 
   // Accepted tradeoff, not an oversight: a change landing in the narrow

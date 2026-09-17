@@ -38,6 +38,12 @@ describe('parseArtifact', () => {
     expect(a.externalRef).toBeNull();
   });
 
+  it('parses origin: stage6-detector distinctly from adopted and authored', () => {
+    const raw = '---\nid: 001-x\nlane: standard\norigin: stage6-detector\n---\n\n## Problem\np\n';
+    const artifact = parseArtifact(raw, 'intent');
+    expect(artifact.origin).toBe('stage6-detector');
+  });
+
   it('throws when frontmatter is missing', () => {
     expect(() => parseArtifact('# no frontmatter', 'intent')).toThrow(
       /frontmatter/i

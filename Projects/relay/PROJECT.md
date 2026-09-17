@@ -2,26 +2,35 @@
 
 > This is a **handoff file**. A fresh Claude session must be able to resume this project from this file alone — even after a year — as if it were a next-day handoff. If resuming requires rediscovering anything by scanning the codebase, this file has failed. Update it at the end of every session, without being asked.
 
-**Status:** Phases 1-5 complete and verified. `@relay/core` (F1-F4 all closed,
-plus `computeMetrics()`), `@relay/cli` (all ten commands, `SourceOfTruthAdapter`
-+ simulated legacy connector, `runGate` now stamps `Approval.latencyS`),
-`@relay/mcp` (all five tools reachable over stdio, verified with a real MCP
-client), `@relay/adapters/claude-code` (`PreToolUse`/`SessionStart` hooks,
-three stage-interview skills, `relay init` wiring), `@relay/daemon` (Fastify +
-`@fastify/websocket` + `chokidar`, holds no authoritative state — verified by
-killing and restarting the real process; now also `POST /api/gate` and
-`GET /api/metrics`) and `@relay/dashboard` (React + Vite, all five SPEC §13
-panels + spotlight, functional build verified live in a real browser against
-real daemon + dev-server processes) built via `docs/plans/phase-2-cli.md`
-through `docs/plans/phase-5-dashboard.md`'s TDD plans, executed with
+**Status: v1 complete and verified — Phases 1 through 6 all done.**
+`@relay/core` (F1-F4 all closed, plus `computeMetrics()`,
+`classifyBreach()`/`parseControlBands()`), `@relay/cli` (all eleven commands
+including `detect`, `init --force`, `SourceOfTruthAdapter` + simulated
+legacy connector, `runGate` now stamps `Approval.latencyS`), `@relay/mcp`
+(all five tools reachable over stdio, verified with a real MCP client),
+`@relay/adapters/claude-code` (`PreToolUse`/`SessionStart` hooks, three
+stage-interview skills, `relay init` wiring), `@relay/daemon` (Fastify +
+`@fastify/websocket` + `chokidar`, holds no authoritative state — verified
+by killing and restarting the real process; `POST /api/gate`,
+`GET /api/metrics`, and the Stage 6 detector on every watcher tick,
+crash-guarded) and `@relay/dashboard` (React + Vite, all five SPEC §13
+panels + spotlight, Incident Strip bound to real `origin: stage6-detector`
+data, functional build verified live in a real browser against real daemon
++ dev-server processes) built via `docs/plans/phase-2-cli.md` through
+`docs/plans/phase-5b-stage6-trigger.md`'s TDD plans, executed with
 `subagent-driven-development` and independently re-verified at every step.
-252/252 tests green (75 core + 100 cli + 9 mcp + 18 adapters + 24 daemon + 26
-dashboard), `tsc -b` clean across all five composite packages plus a clean
-`vite build` for the dashboard, every phase's stated acceptance criteria
-demonstrated live against real running processes, not just asserted by the
-test suite. Phase 6 not started.
+278/278 tests green, `tsc -b` clean across all five composite packages plus
+a clean `vite build` for the dashboard. **Phase 6** ran all ten
+`IMPLEMENTATION_PLAN.md` acceptance criteria live against a real copy of
+`outfit-advisor` (`docs/ACCEPTANCE.md`) — including the crown jewel
+(`relay verify` catching a tampered `spec.md` by exact hash mismatch) and a
+real defect fixed through the full pipeline with genuinely-passing new
+tests — and found and fixed two real bugs in Relay itself along the way
+(`relay init`'s `roles.yml` placeholder, and its missing `--force` flag;
+see Gotchas). What's left is polish and platform breadth (dashboard design
+pass, Cursor/Codex adapters, `apps.js` registration), not v1 functionality.
 **Tier:** client demo
-**Last session:** 2026-09-16
+**Last session:** 2026-09-17
 
 ## What this is
 
@@ -259,7 +268,46 @@ planned — layout in `docs/SPEC.md` §4 and §5.
       yet; that is Phase 5b. 26/26 tests, 9 files, plus a clean production
       `vite build`. **Build is done and verified — ready to focus on
       design** (CLAUDE.md principle 12) — no design pass has been taken.
-- [ ] Stage 6 trigger slice (Phase 5b) — not started
+- [x] Stage 6 trigger slice (Phase 5b) — **verified 2026-09-17.** A
+      deterministic detector (`classifyBreach`/`parseControlBands` in
+      `@relay/core`, no model involved) watches gate-approval latency against
+      version-controlled control bands (`.relay/policies/stage6-bands.yml`,
+      scaffolded by `relay init`); 1σ logs, 2σ calls Claude read-only to
+      diagnose (never writes), 3σ calls Claude to draft a real
+      `intent.md` with `origin: stage6-detector`. Wired into the daemon's
+      existing watcher tick, guarded against a crash a malformed bands file
+      can cause (`findBreaches()` can throw synchronously — see Gotchas).
+      `relay detect` also exists as a standalone CLI command. 277/277 tests
+      (25 new since Phase 5's 252). Verified live end-to-end against the
+      real built daemon and dashboard, not just the unit suite: forced a
+      real 3σ breach in a scratch repo (an old-dated `gate_requested` event
+      approved through the real CLI), confirmed the real, running daemon
+      auto-filed a new item with `origin: stage6-detector` and a lint-clean
+      `intent.md`, and confirmed via the Browser pane that the dashboard's
+      Incident Strip rendered it live — closing Phase 5's own honestly-open
+      "hero beat 3." The one piece this environment cannot verify: an actual
+      network call to Anthropic — no `ANTHROPIC_API_KEY` is configured here,
+      so the live demo's drafting step used a temporarily patched *build*
+      (`packages/daemon/dist/server.js`, never source, restored via a forced
+      clean `tsc -b` rebuild immediately after) injecting a stub `draftFn` in
+      place of the real `draftWithClaude`. Genuine live-API verification
+      remains open pending a real key — same honesty pattern as Phase 3's
+      adapter and Phase 5's dashboard both already recorded.
+- [x] Phase 6 acceptance test — **verified 2026-09-17**, against a real
+      copy of `outfit-advisor` at `Projects/relay-pilot/outfit-advisor/`
+      (own git history, port 8090, real project on 8080 confirmed
+      untouched throughout). All ten `IMPLEMENTATION_PLAN.md` criteria
+      demonstrated with evidence, including the crown jewel (`relay
+      verify` catching a tampered `spec.md` by exact hash mismatch, then
+      passing once re-approved) and a real defect (catalog metadata
+      persistence) fixed through the full pipeline with two new,
+      genuinely-passing tests in a project that had no test directory
+      before. Full report: `docs/ACCEPTANCE.md`. Getting there found and
+      fixed two real bugs in Relay itself — see Changelog and the two new
+      Gotchas below — and surfaced two honestly-recorded, not-fixed
+      limitations (no override control in the dashboard's "Waiting on
+      you" panel; `relay init`'s stray `git remote` stderr noise on a
+      remote-less repo).
 - [ ] Design pass — gated behind all of the above per the functional-first rule
 
 ## Gotchas
@@ -418,49 +466,170 @@ planned — layout in `docs/SPEC.md` §4 and §5.
   a gate through the real API without reloading the page, and confirm
   both the pipeline lane AND the "Waiting on you" membership update
   correctly together.
+- **`.relay/detector-state.json` is the one genuinely-persisted,
+  non-recomputable piece of state in the whole system — a deliberate
+  exception to "no session state, ever" above, not an oversight.** It holds
+  a per-gate cursor (`lastCheckedTs`) of the newest approval timestamp the
+  Stage 6 detector has already acted on, so re-running `relay detect` (or
+  every daemon watcher tick) doesn't re-file the same incident forever. This
+  cannot be recomputed from `.relay/work/**` the way every other piece of
+  state in this project is, because "already handled" isn't a fact derivable
+  from the artifacts themselves — it's the detector's own bookkeeping. It is
+  gitignored (added to `relay init`'s `.gitignore` entries alongside
+  `.relay/tmp/`): losing it is safe and just means the next tick may re-flag
+  a still-breaching gate once more, not silently miss a new one.
+- **Control bands are `{centerline, sigma}` pairs, not six raw boundary
+  numbers.** `.relay/policies/stage6-bands.yml` (`ControlBandsConfig` in
+  `packages/core/src/stage6.ts`) keys `gateLatencyS` by gate
+  (`plan`/`design`/`build`), each a Western Electric centerline+sigma;
+  `classifyBreach()` derives the 1σ/2σ/3σ zones as `centerline ± n·sigma` at
+  read time rather than storing six precomputed thresholds — change the two
+  numbers, not the zones. `relay init`'s defaults
+  (`defaultStage6BandsYaml()` in `packages/cli/src/templates.ts`): plan
+  3600s/1800s, design 7200s/3600s, build 14400s/7200s — round starting
+  points, not measured from real usage; tune per-project once real gate
+  latency data exists.
+- **`relay init` grants the roles to the identity that ran it — this is
+  load-bearing, not decorative.** `defaultRolesYaml()` (`packages/cli/src/templates.ts`)
+  takes the caller's `gitIdentity(cwd)` and stamps it into `.relay/roles.yml`
+  with all three roles. Before Phase 6's acceptance test found this
+  (2026-09-17), it hardcoded the literal string `you@example.com` — meaning
+  every single fresh `relay init`, for anyone, granted zero roles to the
+  person who just ran it. In a `governed` lane this silently produces
+  "you don't hold a required role" on the very first approval attempt, with
+  no obvious cause. Fixed with TDD (`init.test.ts`, `templates.test.ts`);
+  if `defaultRolesYaml`'s signature ever changes again, keep it taking an
+  identity — never revert to a fixed placeholder.
+- **`--override` bypasses far more than self-approval or a wrong role —
+  locally, it bypasses everything `evaluateGate` would have caught.**
+  `runGate`'s `override` action never calls `evaluateGate`; whether an
+  override actually advances an item's stage is decided by `deriveStage`,
+  which by deliberate design (see the comment in
+  `packages/cli/src/commands/status.ts`) uses the thin, authority-only
+  `validApproval` — never the full completeness/chain/tests checks. So
+  `relay gate build --override --reason "..."` moves an item straight to
+  `done` whether or not the tests named in `plan.md` were ever run. Found
+  and confirmed live during Phase 6's acceptance test (`docs/ACCEPTANCE.md`
+  criterion 6). This is consistent with, and an extension of, the existing
+  "Local hooks are ergonomics; CI is the enforcement" gotcha above — `relay
+  verify` (which does call `evaluateGate`, fed real `--tests-passed`
+  evidence) is the only thing that actually catches an override made
+  without running the tests. Do not treat a clean local `relay status` after
+  an override as proof of anything CI would also accept.
 
 ## Next steps
 
-Phases 1-5 are done and verified. `docs/plans/phase-2-cli.md` (26 tasks),
-`docs/plans/phase-3-mcp.md` (14 tasks), `docs/plans/phase-4-daemon.md`
-(9 tasks), and `docs/plans/phase-5-dashboard.md` (14 tasks) are all fully
-executed, reviewed, and committed — see the Changelog below for the real
-bugs code review (and, for Phases 4-5, live manual verification) caught
-along the way (several worth knowing about before touching this code again;
-also captured as Gotchas above).
+**v1 is done.** Phases 1 through 6 are all complete and verified —
+`docs/plans/phase-2-cli.md` (26 tasks), `docs/plans/phase-3-mcp.md`
+(14 tasks), `docs/plans/phase-4-daemon.md` (9 tasks),
+`docs/plans/phase-5-dashboard.md` (14 tasks),
+`docs/plans/phase-5b-stage6-trigger.md` (9 tasks), and Phase 6's ten
+acceptance criteria (`docs/ACCEPTANCE.md`) — see the Changelog below for the
+real bugs code review (and live manual verification) caught along the way
+(several worth knowing about before touching this code again; also captured
+as Gotchas above). What's left is polish and platform breadth, not v1 scope:
 
-1. **The Stage 6 trigger slice next** (Phase 5b) — the third hero beat.
-   Three pieces per `IMPLEMENTATION_PLAN.md`: a deterministic detector (no
-   model involved — Western Electric rules against version-controlled
-   control bands), an intent writer (Anthropic SDK, `claude-opus-5`, key
-   from the environment), and binding the dashboard's already-built (but
-   currently empty) incident strip panel to real data. Only needs the
-   daemon, not further dashboard work, beyond that one binding.
-2. Register `@relay/dashboard`/`@relay/daemon` in `apps.js` — port 5182,
-   already assigned and exercised live in every Phase 4-5 verification run.
-   Not yet registered because there's no `start.sh`/`stop.sh` wiring both
-   processes together yet (the daemon and dashboard dev server were always
-   started as two separate manual processes for verification) — that's
-   worth building before registering, not a blocker for registering per se,
-   but do both together rather than registering a launcher entry for
+1. Register `@relay/dashboard`/`@relay/daemon` in `apps.js` — port 5182,
+   already assigned and exercised live in every Phase 4-6 verification
+   run. Not yet registered because there's no `start.sh`/`stop.sh` wiring
+   both processes together yet (the daemon and dashboard dev server were
+   always started as two separate manual processes for verification) —
+   that's worth building before registering, not a blocker for registering
+   per se, but do both together rather than registering a launcher entry for
    something that still needs two manual commands to actually run.
-3. A design pass on the dashboard, once explicitly asked for — the
+2. A design pass on the dashboard, once explicitly asked for — the
    functional build is verified and announced done (see Features above);
    CLAUDE.md principle 12 gates the design pass behind that announcement,
    not behind this phase's own completion alone.
-4. Cursor and Codex adapters can wait until the MCP surface has been
+3. Cursor and Codex adapters can wait until the MCP surface has been
    dogfooded against real use through Claude Code first.
-5. Phase 6 is the acceptance test, against a **copy** of outfit-advisor at
-   `Projects/relay-pilot/` — never the real project, never on port 8080.
-6. Still genuinely open, not deferred by choice: a live, human-observed
+4. Genuine live-API verification of the Stage 6 intent writer remains open
+   pending a real `ANTHROPIC_API_KEY` — the live acceptance run used a
+   stubbed `draftFn` (see Features above). Worth doing once a key exists,
+   same pattern as item 5 below.
+5. Still genuinely open, not deferred by choice: a live, human-observed
    Claude Code session actually getting an edit refused and then succeeding
-   under the real hook — Phase 3's acceptance demo drove the same hook
-   command exactly as Claude Code's documented dispatch mechanism does, but
-   nothing in this environment can spawn a second interactive Claude Code
-   process to watch it happen live. Worth doing once, by hand, before calling
-   the adapter production-ready.
+   under the real hook — Phase 3's acceptance demo, and Phase 6's own
+   criterion 6, both drove the same hook command exactly as Claude Code's
+   documented dispatch mechanism does, but nothing in this environment can
+   spawn a second interactive Claude Code process to watch it happen live.
+   Worth doing once, by hand, before calling the adapter production-ready.
+6. The two discovered-but-not-fixed gaps from Phase 6 (`docs/ACCEPTANCE.md`):
+   the dashboard's "Waiting on you" panel has no override control (a
+   governed-lane, single-approver deadlock can only be broken from the
+   CLI), and `relay init` leaks a raw `git remote` stderr line on a
+   repo with no `origin`. Neither is a v1 blocker; both are small, real,
+   worth a future pass.
+7. `Projects/relay-pilot/outfit-advisor/` (Phase 6's pilot copy) still
+   exists on disk, left there per the plan's own "ask before deleting"
+   instruction — not registered anywhere, safe to ignore or delete once
+   asked.
 
 ## Changelog — append-only, newest first
+
+- 2026-09-17 (Phase 6 — acceptance test, v1 complete): Ran all ten
+  `docs/IMPLEMENTATION_PLAN.md` acceptance criteria live against
+  `Projects/relay-pilot/outfit-advisor/`, a real copy of `outfit-advisor`
+  (own git history, port 8090 — the real project, on 8080, confirmed
+  untouched throughout via `git status --short Projects/outfit-advisor`
+  returning no output). Full report: `docs/ACCEPTANCE.md`. Highlights: the
+  crown jewel (criterion 8) caught a deliberately tampered `spec.md` by
+  exact hash mismatch and cascaded the failure to the downstream build
+  gate, then passed cleanly once re-approved — not faked. The real defect
+  (catalog metadata living only in gitignored/untracked runtime state) was
+  fixed through the full pipeline — intent → spec (concern flagged and
+  resolved) → plan (naming exact tests) → implementation — with two new,
+  genuinely-passing tests (`server/test/db-persistence.test.js`, Node's
+  built-in `node:test`, no new dependency) in a project that had no test
+  directory before. Two real bugs in Relay itself were found and fixed
+  along the way, both with TDD: (1) `defaultRolesYaml()`
+  (`packages/cli/src/templates.ts`) hardcoded the literal placeholder
+  `you@example.com` instead of the actual git identity of whoever ran
+  `relay init` — meaning every fresh `init`, for anyone, ever, granted zero
+  roles to the person who just ran it; fixed to take and stamp the real
+  identity. (2) `relay init`'s `--force` flag existed at the `runInit()`
+  API level and was already unit-tested, but was never wired to the actual
+  CLI command — fixed by adding `.option('--force')`. Also found and
+  recorded, not fixed (matches existing documented design, extends the
+  "Local hooks are ergonomics; CI is the enforcement" gotcha): `--override`
+  bypasses `evaluateGate` entirely at the local level (`deriveStage` uses
+  the thin, authority-only `validApproval`), so a local override can
+  advance an item to `done` without its named tests ever having run — only
+  `relay verify` (fed real `--tests-passed` evidence) catches that. Two
+  smaller, non-blocking gaps recorded for later: the dashboard's "Waiting
+  on you" panel has no override control, and `relay init` leaks a raw `git
+  remote` stderr line on a repo with no `origin`. Final state: 278/278
+  tests (277 + 1 new, covering the roles.yml fix), `tsc -b` clean, pilot
+  copy left in place per the plan's "ask before deleting" instruction.
+  **This closes v1** — Phases 1 through 6 are all complete and verified.
+
+- 2026-09-17 (Phase 5b — Stage 6 trigger slice): Executed
+  `docs/plans/phase-5b-stage6-trigger.md`'s 9 tasks via
+  `superpowers:subagent-driven-development` — same discipline as Phases 2-5.
+  Two design decisions confirmed with the user up front, since SPEC.md left
+  this phase genuinely underspecified: gate latency as the v1 metric, and
+  building the Anthropic SDK integration for real with a mock standing in
+  for the live call (no `ANTHROPIC_API_KEY` in this environment). Two real
+  bugs found and fixed along the way, both mutation/crash-reproduced before
+  and after: (1) `saveDetectorState` missing `mkdirSync`, ENOENT in a fresh
+  repo; (2) a genuinely reproduced daemon crash — a malformed
+  `stage6-bands.yml` made `findBreaches()` throw synchronously inside a
+  chokidar `'all'` listener with no surrounding try/catch, taking down the
+  whole daemon process; fixed with a try/catch, re-confirmed surviving the
+  identical scenario after the fix. Final state: `npm run build` and
+  `npm run build:dashboard` both clean, `npx vitest run` — 277/277 tests
+  (25 new since Phase 5's 252). Verified live end-to-end against the real
+  built daemon and dashboard: forced a real 3σ gate-latency breach in a
+  scratch repo, confirmed the running daemon auto-filed a lint-clean
+  `intent.md` with `origin: stage6-detector`, and confirmed via the Browser
+  pane that the dashboard's Incident Strip rendered it live — closing Phase
+  5's own honestly-open "hero beat 3." The drafting call itself used a
+  temporarily patched build (`packages/daemon/dist/server.js`, restored via
+  a forced clean `tsc -b` rebuild immediately after — confirmed
+  byte-identical to the pre-patch build) injecting a stub `draftFn` in place
+  of the real Anthropic call, since no key exists in this environment —
+  genuine live-API verification remains open, recorded honestly rather than
+  worked around, same pattern as Phase 3's adapter and Phase 5's dashboard.
 
 - 2026-09-16 (Phase 5 — `@relay/dashboard`): Executed
   `docs/plans/phase-5-dashboard.md`'s 14 tasks via

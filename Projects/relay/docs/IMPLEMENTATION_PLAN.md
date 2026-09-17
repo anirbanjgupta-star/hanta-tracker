@@ -1218,7 +1218,7 @@ The thin slice that closes the loop, and the third hero beat. Three pieces:
 
 ### Task 6.1: Make the copy
 
-- [ ] **Step 1: Create the pilot copy**
+- [x] **Step 1: Create the pilot copy**
 
 ```bash
 mkdir -p /Users/aj/Desktop/Claude/Projects/relay-pilot
@@ -1229,7 +1229,7 @@ rsync -a --exclude node_modules --exclude .git --exclude 'server/data' \
 
 Roughly 29 MB, of which ~10 MB is photos. Excluding `.git` is deliberate — the copy gets fresh history so Relay's branches never touch the real project's.
 
-- [ ] **Step 2: Give it its own history and port**
+- [x] **Step 2: Give it its own history and port**
 
 ```bash
 cd /Users/aj/Desktop/Claude/Projects/relay-pilot/outfit-advisor
@@ -1240,31 +1240,31 @@ node scripts/migrate.js
 
 `server/index.js:7` reads `process.env.PORT || 8080`, so run the copy on a free port with `PORT=<port> node server/index.js` and never on 8080 — that is the real project's port.
 
-- [ ] **Step 3: Confirm the copy works before Relay touches it**
+- [x] **Step 3: Confirm the copy works before Relay touches it**
 
 Run the server, load `outfit-maker.html`, confirm the catalog renders. **Respect the documented gotcha:** start it with `nohup ... & disown` and verify with a *second, separately timed* `lsof -ti:<port>` check, because a plain background job does not reliably survive between agent tool calls. A previous session lost hours to exactly this.
 
-- [ ] **Step 4: Do not register this in `apps.js`.** It is ephemeral.
+- [x] **Step 4: Do not register this in `apps.js`.** It is ephemeral.
 
 ### Task 6.2: The ten acceptance criteria
 
 Each must be demonstrated and the evidence stated, not asserted.
 
-- [ ] **1.** `relay init` runs on the copy, detects no existing `.claude/` tooling, installs `.relay/` plus MCP registration and a CI workflow, and honestly reports the tier reached.
-- [ ] **2.** `relay serve` opens the board on 5182; it is empty and correct.
-- [ ] **3.** `relay new "persist catalog metadata in git" --lane governed` creates the item and branch, and a card appears on the board.
-- [ ] **4.** The agent drafts `intent.md` through conversation; the card sits at the Plan gate.
-- [ ] **5.** Approving in the browser moves it to Design; the spec is drafted with the data-loss concern flagged and resolved.
-- [ ] **6.** The agent is **blocked** from editing `server/` until the build gate passes, and unblocks the moment it does.
-- [ ] **7.** The real defect is fixed through the pipeline. The defect, from the project's own PROJECT.md: items added through the UI live only in gitignored `server/data/db.json`, so catalog metadata for anything added after the original migration exists nowhere in git and is lost if `db.json` is re-seeded. The touch points are `server/lib/db.js` (`readDb`/`writeDb`, `DB_PATH`) and the routes that write. Note the project has **no test directory** — the `plan.md` must name the tests it will create, and they must exist and pass.
-- [ ] **8.** **The crown jewel.** `relay verify` fails on a branch where `spec.md` was edited after approval, with a reason naming the hash mismatch — and passes once re-approved. If this one is faked, the tool is worthless.
-- [ ] **9.** Kill the daemon, close the session, reopen cold, run `relay resume` — the briefing accurately describes the item, its stage, its blocking gate, and its open questions.
-- [ ] **10.** The metrics strip shows real numbers derived from the commits just made, with nothing hand-entered.
+- [x] **1.** `relay init` runs on the copy, detects no existing `.claude/` tooling, installs `.relay/` plus MCP registration and a CI workflow, and honestly reports the tier reached.
+- [x] **2.** `relay serve` opens the board on 5182; it is empty and correct.
+- [x] **3.** `relay new "persist catalog metadata in git" --lane governed` creates the item and branch, and a card appears on the board.
+- [x] **4.** The agent drafts `intent.md` through conversation; the card sits at the Plan gate.
+- [x] **5.** Approving in the browser moves it to Design; the spec is drafted with the data-loss concern flagged and resolved.
+- [x] **6.** The agent is **blocked** from editing `server/` until the build gate passes, and unblocks the moment it does.
+- [x] **7.** The real defect is fixed through the pipeline. The defect, from the project's own PROJECT.md: items added through the UI live only in gitignored `server/data/db.json`, so catalog metadata for anything added after the original migration exists nowhere in git and is lost if `db.json` is re-seeded. The touch points are `server/lib/db.js` (`readDb`/`writeDb`, `DB_PATH`) and the routes that write. Note the project has **no test directory** — the `plan.md` must name the tests it will create, and they must exist and pass.
+- [x] **8.** **The crown jewel.** `relay verify` fails on a branch where `spec.md` was edited after approval, with a reason naming the hash mismatch — and passes once re-approved. If this one is faked, the tool is worthless.
+- [x] **9.** Kill the daemon, close the session, reopen cold, run `relay resume` — the briefing accurately describes the item, its stage, its blocking gate, and its open questions.
+- [x] **10.** The metrics strip shows real numbers derived from the commits just made, with nothing hand-entered.
 
 ### Task 6.3: Report and clean up
 
-- [ ] **Step 1: Write the result** into `Projects/relay/docs/ACCEPTANCE.md` — each criterion, what was observed, and screenshots for the visual ones. State plainly any criterion that did not pass.
-- [ ] **Step 2: Confirm the real project is untouched**
+- [x] **Step 1: Write the result** into `Projects/relay/docs/ACCEPTANCE.md` — each criterion, what was observed, and screenshots for the visual ones. State plainly any criterion that did not pass.
+- [x] **Step 2: Confirm the real project is untouched**
 
 ```bash
 cd /Users/aj/Desktop/Claude && git status --short Projects/outfit-advisor
@@ -1272,7 +1272,7 @@ cd /Users/aj/Desktop/Claude && git status --short Projects/outfit-advisor
 
 Expected: no output. If there is any, stop and report it — the pilot leaked.
 
-- [ ] **Step 3: Ask before deleting** `Projects/relay-pilot/`. Never remove it unprompted.
+- [x] **Step 3: Ask before deleting** `Projects/relay-pilot/`. Never remove it unprompted.
 
 ---
 
