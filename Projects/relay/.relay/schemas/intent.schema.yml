@@ -1,0 +1,10 @@
+# Mirrors the rules hardcoded in @relay/core's schema.ts as of Phase 2.
+# Not yet read back by `relay lint` — forkable documentation today, live
+# configuration in a future phase.
+kind: intent
+requiredSections:
+  - "Problem"
+  - "Proposed outcome"
+  - "Affected users and systems"
+  - "Constraints"
+  - "Open questions"

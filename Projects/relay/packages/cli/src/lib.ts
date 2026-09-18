@@ -1,0 +1,13 @@
+export { runInit, type InitResult } from './commands/init.js';
+export { runNew, type NewOptions, type NewResult } from './commands/new.js';
+export { runUse } from './commands/use.js';
+export { runStatus, type StatusResult } from './commands/status.js';
+export { runLint, type LintReport } from './commands/lint.js';
+export { runGate, type GateAction } from './commands/gate.js';
+export { runHandover, type HandoverTarget } from './commands/handover.js';
+export { runResume, type ResumeBrief } from './commands/resume.js';
+export { runVerify, type VerifyOptions, type VerifyReport } from './commands/verify.js';
+export { resolveCurrentItemId } from './current-item.js';
+export { loadRelayConfig, buildApprovalContext } from './context.js';
+export { loadWorkItem, appendEvent, itemDir, listItemIds } from './relay-dir.js';
+export { findBreaches, runStage6Detect, type Finding } from './commands/detect.js';

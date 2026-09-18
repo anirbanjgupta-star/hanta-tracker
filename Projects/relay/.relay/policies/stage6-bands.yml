@@ -1,0 +1,10 @@
+gateLatencyS:
+  plan:
+    centerline: 3600
+    sigma: 1800
+  design:
+    centerline: 7200
+    sigma: 3600
+  build:
+    centerline: 14400
+    sigma: 7200

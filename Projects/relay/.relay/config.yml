@@ -1,0 +1,38 @@
+sourceOfTruth: repo
+defaultLane: standard
+lanes:
+  express:
+    requires:
+      - plan
+    gateRoles: {}
+    allowSelfApproval: true
+    driftIsFatal: false
+  standard:
+    requires:
+      - intent
+      - spec
+      - plan
+    gateRoles:
+      plan:
+        - product-owner
+      design:
+        - product-owner
+      build:
+        - engineer
+    allowSelfApproval: true
+    driftIsFatal: false
+  governed:
+    requires:
+      - intent
+      - spec
+      - plan
+    gateRoles:
+      plan:
+        - product-owner
+      design:
+        - product-owner
+        - tech-lead
+      build:
+        - engineer
+    allowSelfApproval: false
+    driftIsFatal: true
