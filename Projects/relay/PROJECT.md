@@ -46,13 +46,27 @@ approved design and it is detailed.**
 
 ## Run it
 
-- **Start:** `bash start.sh` — ⚠ placeholder, fails on purpose until implemented
-- **Stop:** `bash stop.sh` — ⚠ placeholder
-- **URL:** http://localhost:5182
-- **Ports:** 5182 (dashboard + daemon, single origin). Assigned 2026-09-11 via
-  `scripts/next-free-port.sh`; free in `apps.js` and `lsof` at that time.
-  ⚠ NOT yet registered in `/Users/aj/Desktop/Claude/launcher/server/apps.js` —
-  register it when the dashboard first boots, not before.
+- **Start:** `bash start.sh` — builds if needed, starts the daemon (5182)
+  and the dashboard dev server (5183) as two background processes, traps
+  Ctrl+C to stop both.
+- **Stop:** `bash stop.sh` — kills whatever's listening on 5182 and 5183.
+- **URL:** http://localhost:5183 (the dashboard — what a user opens;
+  5182 is the daemon's internal API/WS, proxied to by the dashboard's own
+  `vite.config.ts`, never opened directly).
+- **Ports:** 5182 (daemon) assigned 2026-09-11; 5183 (dashboard) picked
+  2026-09-18 specifically to avoid the existing `council` entry's 5173 —
+  do not "simplify" this back to one port, the daemon and dashboard are
+  genuinely two separate processes (see Gotchas). Both registered in
+  `/Users/aj/Desktop/Claude/launcher/server/apps.js` (`id: 'relay'`,
+  `port: 5183`) 2026-09-18.
+- **Self-dogfooding:** `relay init` has been run on this repo itself
+  (Tier 0, deliberately — no `CLAUDE.md` here, so the Claude Code adapter
+  is NOT installed; that would block future `Edit`/`Write` calls on
+  `packages/**` behind an approved build gate, which nobody asked for and
+  would actively get in the way of normal development on Relay itself).
+  `.relay/work/001-silence-relay-init-s-stray-git-remote-st/` is a real,
+  currently-open backlog item (the stderr-noise gap from `docs/ACCEPTANCE.md`),
+  sitting honestly at the plan gate, unapproved — not a demo fixture.
 - **Env/keys:** `.env.example` — nothing required yet. Ingest adapters will need
   provider tokens later.
 
@@ -516,6 +530,31 @@ planned — layout in `docs/SPEC.md` §4 and §5.
   evidence) is the only thing that actually catches an override made
   without running the tests. Do not treat a clean local `relay status` after
   an override as proof of anything CI would also accept.
+- **The daemon watches `process.cwd()`, not a fixed location — this is why
+  `start.sh` needs two ports, not one.** `packages/daemon/src/index.ts`
+  builds its server against whatever directory it's launched from (the
+  same way `relay` the CLI works from any project). There is no
+  `@fastify/static`/file-serving in the daemon (checked, not assumed —
+  see the daemon's own Features entry), so the dashboard's dev server is a
+  genuinely separate process; its `vite.config.ts` proxies `/api` and
+  `/stream` to a hardcoded `http://localhost:5182`. `start.sh` runs both:
+  daemon on 5182 (watching this repo's own `.relay/`), dashboard on 5183.
+  Don't "simplify" this into one process without first building real
+  static-serving into the daemon — that's new scope, not a refactor.
+- **`Projects/relay` is not its own git repo — it's a subdirectory of the
+  larger `/Users/aj/Desktop/Claude` workspace repo.** `relay new` (and
+  anything else that calls `createBranch`/`git checkout -b`) therefore
+  switches the *entire workspace's* current branch, not something scoped
+  to this project. Found live while self-dogfooding (2026-09-18): creating
+  `001-silence-relay-init-s-stray-git-remote-st` left the whole
+  `/Users/aj/Desktop/Claude` checkout on a `relay/001-...` branch until
+  switched back by hand. Harmless (nothing is lost switching branches —
+  uncommitted changes and untracked `.relay/work/**` files both carry
+  over), but genuinely surprising the first time. Before running `relay
+  new` (or anything gate-related) against this repo again, know you're
+  about to move the whole workspace's branch, and switch back deliberately
+  once done — don't leave a future session wondering why it isn't on
+  `main`/`feature/*` anymore.
 
 ## Next steps
 
@@ -529,14 +568,13 @@ real bugs code review (and live manual verification) caught along the way
 (several worth knowing about before touching this code again; also captured
 as Gotchas above). What's left is polish and platform breadth, not v1 scope:
 
-1. Register `@relay/dashboard`/`@relay/daemon` in `apps.js` — port 5182,
-   already assigned and exercised live in every Phase 4-6 verification
-   run. Not yet registered because there's no `start.sh`/`stop.sh` wiring
-   both processes together yet (the daemon and dashboard dev server were
-   always started as two separate manual processes for verification) —
-   that's worth building before registering, not a blocker for registering
-   per se, but do both together rather than registering a launcher entry for
-   something that still needs two manual commands to actually run.
+1. ~~Register `@relay/dashboard`/`@relay/daemon` in `apps.js`~~ — **done
+   2026-09-18.** `start.sh`/`stop.sh` implemented (daemon on 5182,
+   dashboard dev server on 5183 — see Gotchas for why two ports, and Run
+   it above), registered in `apps.js` as `id: 'relay'`. Relay has also
+   been self-dogfogged onto its own repo (`relay init`, Tier 0,
+   deliberately no adapter) — its own dashboard now shows a real, open
+   backlog item, not an empty board.
 2. A design pass on the dashboard, once explicitly asked for — the
    functional build is verified and announced done (see Features above);
    CLAUDE.md principle 12 gates the design pass behind that announcement,
@@ -554,12 +592,15 @@ as Gotchas above). What's left is polish and platform breadth, not v1 scope:
    documented dispatch mechanism does, but nothing in this environment can
    spawn a second interactive Claude Code process to watch it happen live.
    Worth doing once, by hand, before calling the adapter production-ready.
-6. The two discovered-but-not-fixed gaps from Phase 6 (`docs/ACCEPTANCE.md`):
+6. Two small, real, non-blocking gaps from Phase 6 (`docs/ACCEPTANCE.md`):
    the dashboard's "Waiting on you" panel has no override control (a
    governed-lane, single-approver deadlock can only be broken from the
-   CLI), and `relay init` leaks a raw `git remote` stderr line on a
-   repo with no `origin`. Neither is a v1 blocker; both are small, real,
-   worth a future pass.
+   CLI) — not yet tracked as a work item; and `relay init`'s stray `git
+   remote` stderr noise — **now tracked as Relay's own first real
+   self-dogfooded work item**,
+   `.relay/work/001-silence-relay-init-s-stray-git-remote-st/`, sitting at
+   the plan gate, unapproved. Pick it up like any other Relay item:
+   `relay status 001-...`, draft `spec.md`, etc.
 7. `Projects/relay-pilot/outfit-advisor/` (Phase 6's pilot copy) still
    exists on disk, left there per the plan's own "ask before deleting"
    instruction — not registered anywhere, safe to ignore or delete once

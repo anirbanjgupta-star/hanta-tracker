@@ -1,1 +1,4 @@
 *.tsbuildinfo
+.relay/CURRENT
+.relay-legacy-tickets.json
+.relay/detector-state.json

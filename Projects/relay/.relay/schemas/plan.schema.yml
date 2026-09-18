@@ -1,0 +1,8 @@
+# Mirrors the rules hardcoded in @relay/core's schema.ts as of Phase 2.
+# Not yet read back by `relay lint` — forkable documentation today, live
+# configuration in a future phase.
+kind: plan
+requiredSections:
+  - "Files that change"
+  - "Work order"
+  - "Tests that prove completion"
